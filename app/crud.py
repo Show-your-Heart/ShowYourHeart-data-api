@@ -66,8 +66,8 @@ def get_answers(db, organization:str, campaign: str ):
         with res as (
             select a.*
             , p.gender as prev_gender, p.value as prev_value, p.str_gender as prev_str_gender, p.str_value as prev_str_value
-                from external.data_results_agg a
-                left join external.data_results_agg p on a.id_organization = p.id_organization and a.previous_campaign_id  = p.id_campaign 
+                from external.answers_calc_agg a
+                left join external.answers_calc_agg p on a.id_organization = p.id_organization and a.previous_campaign_id  = p.id_campaign 
                     and a.id_indicator = p.id_indicator
                 where a.id_organization='{organization}'
                 and a.id_campaign = '{campaign}'	
@@ -138,6 +138,5 @@ def get_answers(db, organization:str, campaign: str ):
             ) t
     """
 
-
     registries = db.execute(text(qry))
-    return [dict(zip(registries.keys(), t)) for t in registries]
+    return registries.fetchone()["json_agg"]

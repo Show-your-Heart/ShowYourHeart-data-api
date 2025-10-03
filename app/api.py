@@ -131,3 +131,12 @@ def create_user(user: schemas.ApiUserCreate, db: Session = Depends(get_db)
         raise HTTPException(status_code=400, detail="Username already registered")
     return crud.create_user(db=db, user=user)
 
+
+@app.get("/answers", tags=["Data"])
+def answers(
+        organization: str,
+        campaign: str,
+        # current_user: schemas.ApiUser = Depends(get_current_active_user),
+        db: Session = Depends(get_db)
+):
+    return crud.get_answers(db, organization=organization, campaign=campaign)

@@ -60,7 +60,8 @@ def create_access_token(data: dict, expires_delta: Optional[datetime.timedelta] 
 
 
 
-def get_answers(db, organization:str, campaign: str ):
+def get_answers(db, organization:str, campaign: str, language: str = None ):
+    lang = ("_"+language) if language is not None else ""
 
     qry = f"""
         with res as (
@@ -72,18 +73,19 @@ def get_answers(db, organization:str, campaign: str ):
                 where a.id_organization='{organization}'
                 and a.id_campaign = '{campaign}'	
         )
-        , camp as  (select distinct id_campaign, campaign_name 
+        , camp as  (select distinct id_campaign, campaign_name{lang}  as campaign_name
             from res)
         , survey as  (select distinct id_campaign, id_survey,survey_created_at, survey_updated_at,status 
             , id_organization, organization_name, vat_number 
             from res)
-        , method as  (select distinct id_campaign, id_survey, id_method, active, method_name, method_description  
+        , method as  (select distinct id_campaign, id_survey, id_method, active, method_name{lang} as method_name, method_description{lang} as method_description
             from res)	
-        , method_section as  (select distinct id_campaign, id_survey, id_method, id_methods_section, method_section_title, path_order, method_level
+        , method_section as  (select distinct id_campaign, id_survey, id_method, id_methods_section, method_section_title{lang} as method_section_title, path_order, method_level
             from res
             order by path_order
             )	
-        , indicator as  (select distinct id_campaign, id_survey, id_method, id_methods_section, id_indicator, project_id, indicator_name, indicator_description, is_direct_indicator, indicator_category, indicator_data_type, indicator_unit
+        , indicator as  (select distinct id_campaign, id_survey, id_method, id_methods_section, id_indicator, project_id, indicator_name{lang} as indicator_name, indicator_description{lang} as indicator_description
+            , is_direct_indicator, indicator_category, indicator_data_type, indicator_unit
             from res)	
         , indicator_result as  (select distinct id_campaign, id_survey, id_method, id_methods_section, id_indicator
             , gender, value, str_gender, str_value

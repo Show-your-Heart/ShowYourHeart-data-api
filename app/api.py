@@ -136,7 +136,8 @@ def create_user(user: schemas.ApiUserCreate, db: Session = Depends(get_db)
 def answers(
         organization: str,
         campaign: str,
+        language: str = None,
         # current_user: schemas.ApiUser = Depends(get_current_active_user),
         db: Session = Depends(get_db)
 ):
-    return crud.get_answers(db, organization=organization, campaign=campaign)
+    return crud.get_answers(db, organization=organization, campaign=campaign, language=language)

@@ -111,7 +111,7 @@ def get_answers(db, organization:str, campaign: str, language: str = None ):
                                                 from (
                                                     select id_indicator, project_id, indicator_name, indicator_description, is_direct_indicator, indicator_category, indicator_data_type, indicator_unit
                                                     , (
-                                                        select json_agg(ir)
+                                                        select json_agg(ir order by gender, prev_gender)
                                                         from (
                                                             select gender, value,str_gender, str_value
                                                             , prev_gender, prev_value, prev_str_gender, prev_str_value

@@ -84,7 +84,7 @@ def get_answers(db, organization:str, campaign: str, language: str = None ):
             from res
             order by path_order
             )	
-        , indicator as  (select distinct id_campaign, id_survey, id_method, id_methods_section, id_indicator, project_id, indicator_name{lang} as indicator_name, indicator_description{lang} as indicator_description
+        , indicator as  (select distinct id_campaign, id_survey, id_method, id_methods_section, id_indicator, indicator_code, indicator_name{lang} as indicator_name, indicator_description{lang} as indicator_description
             , is_direct_indicator, indicator_category, indicator_data_type, indicator_unit
             from res)	
         , indicator_result as  (select distinct id_campaign, id_survey, id_method, id_methods_section, id_indicator
@@ -109,7 +109,7 @@ def get_answers(db, organization:str, campaign: str, language: str = None ):
                                             , (
                                                 select json_agg(msi)
                                                 from (
-                                                    select id_indicator, project_id, indicator_name, indicator_description, is_direct_indicator, indicator_category, indicator_data_type, indicator_unit
+                                                    select id_indicator, indicator_code, indicator_name, indicator_description, is_direct_indicator, indicator_category, indicator_data_type, indicator_unit
                                                     , (
                                                         select json_agg(ir order by gender, prev_gender)
                                                         from (

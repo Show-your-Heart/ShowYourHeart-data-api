@@ -60,9 +60,9 @@ def create_access_token(data: dict, expires_delta: Optional[datetime.timedelta] 
 
 
 
-def get_answers(db, organization:str, campaign: str, language: str = None ):
+def get_answers(db, organization:str, campaign: str, language: str = None, direct_indicators: bool = True ):
     lang = ("_"+language) if language is not None else ""
-
+    dr = 'and a.is_direct_indicator' if direct_indicators else 'and not a.is_direct_indicator'
     qry = f"""
         with res as (
             select a.id_campaign, a.campaign_name, a.campaign_name_en, a.campaign_name_ca, a.campaign_name_es, a.campaign_name_eu, a.campaign_name_gl, a.campaign_name_nl, a."year", a.previous_campaign_id
@@ -76,7 +76,7 @@ def get_answers(db, organization:str, campaign: str, language: str = None ):
                     and a.id_indicator = p.id_indicator
                 where a.id_organization='{organization}'
                 and a.id_campaign = '{campaign}'	
-                and a.is_direct_indicator
+                {dr}
         )
         , camp as  (select distinct id_campaign, campaign_name{lang}  as campaign_name
             from res)

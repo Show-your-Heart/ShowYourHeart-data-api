@@ -137,7 +137,8 @@ def answers(
         organization: str,
         campaign: str,
         language: str = None,
+        direct_indicators: bool = True,
         # current_user: schemas.ApiUser = Depends(get_current_active_user),
         db: Session = Depends(get_db)
 ):
-    return crud.get_answers(db, organization=organization, campaign=campaign, language=language)
+    return crud.get_answers(db, organization=organization, campaign=campaign, language=language, direct_indicators=direct_indicators)

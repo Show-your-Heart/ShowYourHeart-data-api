@@ -76,6 +76,7 @@ def get_answers(db, organization:str, campaign: str, language: str = None ):
                     and a.id_indicator = p.id_indicator
                 where a.id_organization='{organization}'
                 and a.id_campaign = '{campaign}'	
+                and a.is_direct_indicator
         )
         , camp as  (select distinct id_campaign, campaign_name{lang}  as campaign_name
             from res)

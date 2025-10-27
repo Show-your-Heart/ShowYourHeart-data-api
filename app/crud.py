@@ -112,7 +112,7 @@ def get_answers(db, organization:str, campaign: str, language: str = None, direc
                                         from (
                                             select id_methods_section, method_section_title, path_order, method_level
                                             , (
-                                                select json_agg(msi)
+                                                select json_agg(msi ORDER BY indicator_code)
                                                 from (
                                                     select id_indicator, indicator_code, indicator_name, indicator_description, is_direct_indicator, indicator_category, indicator_data_type, indicator_unit
                                                     , (

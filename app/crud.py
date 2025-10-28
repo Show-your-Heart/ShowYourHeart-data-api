@@ -155,7 +155,7 @@ def get_answers(db, organization:str, campaign: str, language: str = None, direc
 def get_review_answers(db, campaign: str, method: str,  language: str = None ):
     lang = ("_"+language) if language is not None else ""
     qry = f"""
-        select id_campaign, campaign_name, "year"
+        select id_campaign, campaign_name{lang} as campaign_name, "year"
         , id_survey, survey_created_at::timestamp without time zone, survey_updated_at::timestamp without time zone, status
         , id_method, method_name{lang} as method_name, method_description{lang} as method_description
         , id_user, user_name, user_surname, user_email, id_organization, organization_name, vat_number

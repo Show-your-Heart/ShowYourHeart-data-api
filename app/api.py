@@ -153,4 +153,8 @@ def answers(
         # current_user: schemas.ApiUser = Depends(get_current_active_user),
         db: Session = Depends(get_db)
 ):
-    return FileResponse(crud.get_review_answers(db, campaign=campaign, method=method, language=language))
+    file = crud.get_review_answers(db, campaign=campaign, method=method, language=language)
+    headers = {'Content-Disposition': 'attachment; filename="' + file + '"'}
+    return FileResponse(crud.get_review_answers(db, campaign=campaign, method=method, language=language),
+                        headers=headers)
+

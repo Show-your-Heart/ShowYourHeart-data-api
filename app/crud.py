@@ -178,8 +178,8 @@ def get_review_answers(db, campaign: str, method: str,  language: str = None ):
         , 'id_indicator', 'indicator_code', 'indicator_name', 'indicator_description', 'indicator_category',
             'indicator_data_type', 'indicator_unit'
         , 'str_gender', 'str_value']
-
-    df = querytodataframe(qry, cols, db)
+    conn = db.bind
+    df = querytodataframe(qry, cols, conn)
 
     with pd.ExcelWriter(f"{df.iloc[1]['campaign_name']}-{df.iloc[1]['method_name']}.xlsx") as writer:
         for x in df['indicator_code'].unique():

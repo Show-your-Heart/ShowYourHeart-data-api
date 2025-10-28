@@ -3,6 +3,7 @@ from typing import List
 import datetime
 
 from fastapi import Depends, FastAPI, HTTPException, Header, status, Query
+from fastapi.responses import FileResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
@@ -142,3 +143,14 @@ def answers(
         db: Session = Depends(get_db)
 ):
     return crud.get_answers(db, organization=organization, campaign=campaign, language=language, direct_indicators=direct_indicators)
+
+
+@app.get("/review-answers", tags=["Data"])
+def answers(
+        campaign: str,
+        method: str,
+        language: str = None,
+        # current_user: schemas.ApiUser = Depends(get_current_active_user),
+        db: Session = Depends(get_db)
+):
+    return FileResponse(crud.get_review_answers(db, campaign=campaign, method=method, language=language))

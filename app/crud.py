@@ -1,5 +1,7 @@
 import datetime
 from jose import JWTError, jwt
+import pandas as pd
+from  coopdevsutils import querytodataframe
 
 from sqlalchemy.orm import Session
 from typing import Optional
@@ -147,3 +149,46 @@ def get_answers(db, organization:str, campaign: str, language: str = None, direc
 
     registries = db.execute(text(qry))
     return registries.fetchone()["json_agg"]
+
+
+
+def get_review_answers(db, campaign: str, method: str,  language: str = None ):
+    lang = ("_"+language) if language is not None else ""
+    qry = f"""
+        select id_campaign, campaign_name, "year"
+        , id_survey, survey_created_at::timestamp without time zone, survey_updated_at::timestamp without time zone, status
+        , id_method, method_name{lang} as method_name, method_description{lang} as method_description
+        , id_user, user_name, user_surname, user_email, id_organization, organization_name, vat_number
+        , id_methods_section, method_section_title{lang} as method_section_title, method_order, method_level, path_order, sort_value
+        , id_indicator, indicator_code, indicator_name{lang} as indicator_name, indicator_description{lang} as indicator_description, indicator_category, indicator_data_type, indicator_unit
+        , str_gender, str_value
+        from external.answers_calc_agg a
+         where 1=1 
+         and a.is_direct_indicator
+         and a.id_indicator is not null
+        and a.id_campaign = '{campaign}'
+        and a.id_method ='{method}'
+        order by a.id_organization, path_order, indicator_code
+    """
+    cols = ['id_campaign', 'campaign_name', 'year'
+        , 'id_survey', 'survey_created_at', 'survey_updated_at', 'status'
+        , 'id_method', 'method_name', 'method_description'
+        , 'id_user', 'user_name', 'user_surname', 'user_email', 'id_organization', 'organization_name', 'vat_number'
+        , 'id_methods_section', 'method_section_title', 'method_order', 'method_level', 'path_order', 'sort_value'
+        , 'id_indicator', 'indicator_code', 'indicator_name', 'indicator_description', 'indicator_category',
+            'indicator_data_type', 'indicator_unit'
+        , 'str_gender', 'str_value']
+
+    df = querytodataframe(qry, cols, db)
+
+    with pd.ExcelWriter(f"{df.iloc[1]['campaign_name']}-{df.iloc[1]['method_name']}.xlsx") as writer:
+        for x in df['indicator_code'].unique():
+            df1 = df.loc[df['indicator_code'] == x
+            , ['indicator_name'
+                , 'organization_name', 'vat_number', 'user_email'
+                , 'survey_created_at', 'survey_updated_at'
+                , 'str_gender', 'str_value']]
+            df1.to_excel(writer, sheet_name=x, index=False)
+        return f"{df.iloc[1]['campaign_name']}-{df.iloc[1]['method_name']}.xlsx"
+
+

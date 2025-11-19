@@ -71,8 +71,13 @@ def get_answers(db, organization:str, campaign: str, language: str = None, direc
                 , a.id_survey, a.survey_created_at, a.survey_updated_at, a.status
                 , a.id_method, a.active, a.method_name, a.method_name_en, a.method_name_ca, a.method_name_es, a.method_name_eu, a.method_name_gl, a.method_name_nl, a.method_description, a.method_description_en, a.method_description_ca, a.method_description_es, a.method_description_eu, a.method_description_gl, a.method_description_nl, a.id_user, a.user_name, a.user_surname, a.user_email, a.id_organization, a.organization_name, a.vat_number
                 , coalesce(a.id_methods_section, 'e2ef801f-adbc-60d2-36d0-0b9f3516ebc7') id_methods_section, a.method_section_title, a.method_section_title_en, a.method_section_title_ca, a.method_section_title_es, a.method_section_title_eu, a.method_section_title_gl, a.method_section_title_nl, a.method_order, a.method_level, a.path_order, a.sort_value
-                , a.id_indicator, a.indicator_code, a.indicator_name, a.indicator_name_en, a.indicator_name_ca, a.indicator_name_es, a.indicator_name_eu, a.indicator_name_gl, a.indicator_name_nl, a.indicator_description, a.indicator_description_en, a.indicator_description_ca, a.indicator_description_es, a.indicator_description_eu, a.indicator_description_gl, a.indicator_description_nl, a.is_direct_indicator, a.indicator_category, a.indicator_data_type, a.indicator_unit, a.gender, a.value, a.num_gender, a.str_gender, a.str_value
-                , p.gender as prev_gender, p.value as prev_value, p.str_gender as prev_str_gender, p.str_value as prev_str_value
+                , a.id_indicator, a.indicator_code, a.indicator_name, a.indicator_name_en, a.indicator_name_ca, a.indicator_name_es, a.indicator_name_eu, a.indicator_name_gl, a.indicator_name_nl, a.indicator_description, a.indicator_description_en, a.indicator_description_ca, a.indicator_description_es, a.indicator_description_eu, a.indicator_description_gl, a.indicator_description_nl, a.is_direct_indicator, a.indicator_category, a.indicator_data_type, a.indicator_unit, a.gender
+                , a.value, a.num_gender, a.str_gender
+                , a.str_value, a.str_value_en, a.str_value_ca, a.str_value_es, a.str_value_eu, a.str_value_gl, a.str_value_nl
+                , p.gender as prev_gender
+                , p.value as prev_value, p.value_en as prev_value_en, p.value_ca as prev_value_ca, p.value_es as prev_value_es, p.value_eu as prev_value_eu, p.value_gl as prev_value_gl, p.value_nl as prev_value_nl
+                , p.str_gender as prev_str_gender
+                , p.str_value as prev_str_value, p.str_value_en as prev_str_value_en, p.str_value_ca as prev_str_value_ca, p.str_value_es as prev_str_value_es, p.str_value_eu as prev_str_value_eu, p.str_value_gl as prev_str_value_gl, p.str_value_nl as prev_str_value_nl
                 from external.answers_calc_agg a
                 left join external.answers_calc_agg p on a.id_organization = p.id_organization and a.previous_campaign_id  = p.id_campaign 
                     and a.id_indicator = p.id_indicator
@@ -95,8 +100,8 @@ def get_answers(db, organization:str, campaign: str, language: str = None, direc
             , is_direct_indicator, indicator_category, indicator_data_type, indicator_unit
             from res)	
         , indicator_result as  (select distinct id_campaign, id_survey, id_method, id_methods_section, id_indicator
-            , gender, value, str_gender, str_value
-            , prev_gender, prev_value, prev_str_gender, prev_str_value
+            , gender, value, str_gender, str_value{lang}
+            , prev_gender, prev_value, prev_str_gender, prev_str_value{lang}
             from res)		
         SELECT json_agg(t) 
         from (

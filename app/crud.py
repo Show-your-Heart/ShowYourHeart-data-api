@@ -75,7 +75,7 @@ def get_answers(db, organization:str, campaign: str, language: str = None, direc
                 , a.value, a.num_gender, a.str_gender
                 , a.str_value, a.str_value_en, a.str_value_ca, a.str_value_es, a.str_value_eu, a.str_value_gl, a.str_value_nl
                 , p.gender as prev_gender
-                , p.value as prev_value, p.value_en as prev_value_en, p.value_ca as prev_value_ca, p.value_es as prev_value_es, p.value_eu as prev_value_eu, p.value_gl as prev_value_gl, p.value_nl as prev_value_nl
+                , p.value as prev_value
                 , p.str_gender as prev_str_gender
                 , p.str_value as prev_str_value, p.str_value_en as prev_str_value_en, p.str_value_ca as prev_str_value_ca, p.str_value_es as prev_str_value_es, p.str_value_eu as prev_str_value_eu, p.str_value_gl as prev_str_value_gl, p.str_value_nl as prev_str_value_nl
                 from external.answers_calc_agg a

@@ -100,8 +100,8 @@ def get_answers(db, organization:str, campaign: str, language: str = None, direc
             , is_direct_indicator, indicator_category, indicator_data_type, indicator_unit
             from res)	
         , indicator_result as  (select distinct id_campaign, id_survey, id_method, id_methods_section, id_indicator
-            , gender, value, str_gender, str_value{lang}
-            , prev_gender, prev_value, prev_str_gender, prev_str_value{lang}
+            , gender, value, str_gender, str_value{lang} as str_value
+            , prev_gender, prev_value, prev_str_gender, prev_str_value{lang} as prev_str_value
             from res)		
         SELECT json_agg(t) 
         from (

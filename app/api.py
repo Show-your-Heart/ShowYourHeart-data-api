@@ -9,6 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from jose import JWTError, jwt
 
+
+
 from sqlalchemy.orm import Session
 
 from . import crud, models, schemas
@@ -158,3 +160,16 @@ def answers(
     return FileResponse(crud.get_review_answers(db, campaign=campaign, method=method, language=language),
                         headers=headers)
 
+
+@app.get("/export-answers", tags=["Data"])
+def answers(
+        campaign: str,
+        method: str,
+        language: str = None,
+        # current_user: schemas.ApiUser = Depends(get_current_active_user),
+        db: Session = Depends(get_db)
+):
+    file = crud.get_export_answers(db, campaign=campaign, method=method, language=language)
+    headers = {'Content-Disposition': 'attachment; filename="' + file + '"'}
+    return FileResponse(crud.get_export_answers(db, campaign=campaign, method=method, language=language),
+                        headers=headers)

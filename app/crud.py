@@ -9,6 +9,7 @@ from typing import Optional
 from . import models, schemas
 from app.utils import get_password_hash, verify_password
 from sqlalchemy.sql import text
+from openpyxl.utils import get_column_letter
 
 from .config import ALGORITHM, SECRET_KEY
 
@@ -196,4 +197,69 @@ def get_review_answers(db, campaign: str, method: str,  language: str = None ):
             df1.to_excel(writer, sheet_name=x, index=False)
         return f"{df.iloc[1]['campaign_name']}-{df.iloc[1]['method_name']}.xlsx"
 
+
+
+
+def get_export_answers(db, campaign: str, method: str,  language: str = None ):
+    lang = ("_"+language) if language is not None else ""
+    qry = f"""
+        with res as (
+            select  ac.campaign_name{lang} as campaign_name, ac."year", id_campaign
+                , ac.id_method,  ac.method_name{lang} as method_name
+                , ac.vat_number, ac.organization_name, ac.id_organization  
+                , ac.method_section_title{lang} as method_section_title , ac.path_order 
+                , ac.id_indicator, ac.indicator_code , ac.indicator_name{lang} as indicator_name
+                , ac.is_direct_indicator , ac.indicator_category , ac.indicator_data_type 
+                , unnest(translate(ac.str_gender, '[]', '{{}}')::text[]) gender
+                , ac.str_value{lang} as str_value
+                , unnest((case 
+                    when ac.str_value not like '[%' then '{{'||trim(replace(ac.str_value{lang},',','|'))||'}}'  
+                    else replace(replace(translate(ac.str_value{lang}, '[]', '{{}}') , ',}}','}}'),', }}', '}}')
+                    end)::text[])value
+            from external.answers_calc_agg ac 
+            where 1=1
+                and ac.id_campaign ='{campaign}'
+                and ac.id_method ='{method}'
+            order by ac.path_order , indicator_code, gender
+            )
+            select id_campaign, campaign_name, "year"
+                , id_organization, vat_number, organization_name
+                , id_method, method_name
+                , method_section_title, path_order
+                , id_indicator, indicator_code, indicator_name, is_direct_indicator, indicator_category, indicator_data_type
+                , case when str_value like '["%' then value else gender end as classificacio, case when str_value like '["%' then '1' else value end as valor
+            from res
+            order by res.vat_number, path_order, is_direct_indicator, indicator_code, classificacio   
+    """
+
+    cols = ['id_campaign', 'campaign_name', '"year"', 'id_organization', 'vat_number', 'organization_name'
+        , 'id_method', 'method_name', 'method_section_title'
+        , 'path_order', 'id_indicator', 'indicator_code', 'indicator_name', 'is_direct_indicator', 'indicator_category',
+            'indicator_data_type', 'classificacio', 'valor']
+
+    conn = db.bind
+    df = querytodataframe(qry, cols, conn)
+
+    ct = pd.crosstab(
+        index=[df.path_order, df.method_section_title, df.method_name, df.is_direct_indicator, df.indicator_code,
+               df.indicator_name, df.classificacio]
+        , columns=[df.vat_number, df.organization_name], values=df.valor, aggfunc="min")
+
+    # print(ct)
+    #
+    with pd.ExcelWriter(f"result_{df.iloc[1]['campaign_name']}-{df.iloc[1]['method_name']}.xlsx") as writer:
+        ct.to_excel(writer, sheet_name="Resultats")
+        worksheet = writer.sheets['Resultats']
+        worksheet.column_dimensions['A'].hidden = True
+        worksheet.column_dimensions['D'].hidden = True
+        worksheet.column_dimensions['B'].width = 30
+        worksheet.column_dimensions['C'].width = 30
+        worksheet.column_dimensions['E'].width = 30
+        worksheet.column_dimensions['F'].width = 30
+        worksheet.column_dimensions['G'].width = 30
+
+        for col in range(8, 4000):
+            column_letter = get_column_letter(col)
+            worksheet.column_dimensions[column_letter].width = 25
+        return f"{df.iloc[1]['campaign_name']}-{df.iloc[1]['method_name']}.xlsx"
 

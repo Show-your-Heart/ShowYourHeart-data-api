@@ -187,7 +187,7 @@ def get_review_answers(db, campaign: str, method: str,  language: str = None ):
     conn = db.bind
     df = querytodataframe(qry, cols, conn)
 
-    with pd.ExcelWriter(f"{df.iloc[1]['campaign_name']}-{df.iloc[1]['method_name']}.xlsx") as writer:
+    with pd.ExcelWriter(f"{df.iloc[1]['campaign_name']}-{df.iloc[1]['method_name'].replace('/','_')}.xlsx") as writer:
         for x in df['indicator_code'].unique():
             df1 = df.loc[df['indicator_code'] == x
             , ['indicator_name'
@@ -247,7 +247,7 @@ def get_export_answers(db, campaign: str, method: str,  language: str = None ):
 
     # print(ct)
     #
-    with pd.ExcelWriter(f"export_{df.iloc[1]['campaign_name']}-{df.iloc[1]['method_name']}.xlsx") as writer:
+    with pd.ExcelWriter(f"export_{df.iloc[1]['campaign_name']}-{df.iloc[1]['method_name'].replace('/','_')}.xlsx") as writer:
         ct.to_excel(writer, sheet_name="Resultats")
         worksheet = writer.sheets['Resultats']
         worksheet.column_dimensions['A'].hidden = True
@@ -261,5 +261,5 @@ def get_export_answers(db, campaign: str, method: str,  language: str = None ):
         for col in range(8, 4000):
             column_letter = get_column_letter(col)
             worksheet.column_dimensions[column_letter].width = 25
-        return f"export_{df.iloc[1]['campaign_name']}-{df.iloc[1]['method_name']}.xlsx"
+        return f"export_{df.iloc[1]['campaign_name']}-{df.iloc[1]['method_name'].replace('/','_')}.xlsx"
 

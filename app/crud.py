@@ -86,7 +86,7 @@ def get_answers(db, organization:str, campaign: str, method: str, project: str =
                     and a.id_indicator = p.id_indicator
                 where a.id_organization='{organization}'
                 and a.id_campaign = '{campaign}'	
-                and a.id_metod = '{method}'
+                and a.id_method = '{method}'
                 {prj}	
                 {dr}
         )

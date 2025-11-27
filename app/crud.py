@@ -196,13 +196,20 @@ def get_review_answers(db, campaign: str, method: str, organization: str = None,
     conn = db.bind
     df = querytodataframe(qry, cols, conn)
 
-    with pd.ExcelWriter(f"{df.iloc[1]['campaign_name']}-{df.iloc[1]['method_name'].replace('/','_')}.xlsx") as writer:
-        for x in df['indicator_code'].unique():
-            df1 = df.loc[df['indicator_code'] == x
-            , ['indicator_name'
+    excelcolumns =  ['indicator_name'
                 , 'organization_name', 'vat_number', 'user_email', 'project_name'
                 , 'survey_created_at', 'survey_updated_at'
-                , 'str_gender', 'str_value']]
+                , 'str_gender', 'str_value']
+    if project is not None:
+        excelcolumns = ['indicator_name'
+            , 'organization_name', 'vat_number', 'project', 'user_email', 'project_name'
+            , 'survey_created_at', 'survey_updated_at'
+            , 'str_gender', 'str_value']
+
+
+    with pd.ExcelWriter(f"{df.iloc[1]['campaign_name']}-{df.iloc[1]['method_name'].replace('/','_')}.xlsx") as writer:
+        for x in df['indicator_code'].unique():
+            df1 = df.loc[df['indicator_code'] == x, excelcolumns]
             df1.to_excel(writer, sheet_name=x, index=False)
         return f"{df.iloc[1]['campaign_name']}-{df.iloc[1]['method_name']}.xlsx"
 

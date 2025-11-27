@@ -63,9 +63,10 @@ def create_access_token(data: dict, expires_delta: Optional[datetime.timedelta] 
 
 
 
-def get_answers(db, organization:str, campaign: str, language: str = None, direct_indicators: bool = True ):
+def get_answers(db, organization:str, campaign: str, method: str, project: str = None, language: str = None, direct_indicators: bool = True ):
     lang = ("_"+language) if language is not None else ""
-    dr = 'and a.is_direct_indicator' if direct_indicators else 'and not a.is_direct_indicator'
+    prj = f" and a.id_project='{project}'" if project is not None else ""
+    dr = ' and a.is_direct_indicator' if direct_indicators else 'and not a.is_direct_indicator'
     qry = f"""
         with res as (
             select a.id_campaign, a.campaign_name, a.campaign_name_en, a.campaign_name_ca, a.campaign_name_es, a.campaign_name_eu, a.campaign_name_gl, a.campaign_name_nl, a."year", a.previous_campaign_id
@@ -75,6 +76,7 @@ def get_answers(db, organization:str, campaign: str, language: str = None, direc
                 , a.id_indicator, a.indicator_code, a.indicator_name, a.indicator_name_en, a.indicator_name_ca, a.indicator_name_es, a.indicator_name_eu, a.indicator_name_gl, a.indicator_name_nl, a.indicator_description, a.indicator_description_en, a.indicator_description_ca, a.indicator_description_es, a.indicator_description_eu, a.indicator_description_gl, a.indicator_description_nl, a.is_direct_indicator, a.indicator_category, a.indicator_data_type, a.indicator_unit, a.gender
                 , a.value, a.num_gender, a.str_gender
                 , a.str_value, a.str_value_en, a.str_value_ca, a.str_value_es, a.str_value_eu, a.str_value_gl, a.str_value_nl
+                , a.id_project, a.project_name
                 , p.gender as prev_gender
                 , p.value as prev_value
                 , p.str_gender as prev_str_gender
@@ -84,12 +86,14 @@ def get_answers(db, organization:str, campaign: str, language: str = None, direc
                     and a.id_indicator = p.id_indicator
                 where a.id_organization='{organization}'
                 and a.id_campaign = '{campaign}'	
+                and a.id_metod = '{method}'
+                {prj}	
                 {dr}
         )
         , camp as  (select distinct id_campaign, campaign_name{lang}  as campaign_name
             from res)
         , survey as  (select distinct id_campaign, id_survey,survey_created_at, survey_updated_at,status 
-            , id_organization, organization_name, vat_number 
+            , id_organization, organization_name, vat_number, id_project, project_name 
             from res)
         , method as  (select distinct id_campaign, id_survey, id_method, active, method_name{lang} as method_name, method_description{lang} as method_description
             from res)	
@@ -110,7 +114,7 @@ def get_answers(db, organization:str, campaign: str, language: str = None, direc
                 , (
                     SELECT json_agg(s) 
                     FROM (
-                        SELECT id_survey,survey_created_at, survey_updated_at,status, id_organization, organization_name, vat_number  
+                        SELECT id_survey,survey_created_at, survey_updated_at,status, id_organization, organization_name, vat_number, id_project, project_name  
                         , (
                             select json_agg(m)
                             from (
@@ -158,8 +162,10 @@ def get_answers(db, organization:str, campaign: str, language: str = None, direc
 
 
 
-def get_review_answers(db, campaign: str, method: str,  language: str = None ):
+def get_review_answers(db, campaign: str, method: str, organization: str = None, project: str = None, language: str = None ):
     lang = ("_"+language) if language is not None else ""
+    orga = f" and a.id_organization='{organization}'" if organization is not None else ""
+    prj = f" and a.id_project='{project}'" if project is not None else ""
     qry = f"""
         select id_campaign, campaign_name{lang} as campaign_name, "year"
         , id_survey, survey_created_at::timestamp without time zone, survey_updated_at::timestamp without time zone, status
@@ -168,12 +174,15 @@ def get_review_answers(db, campaign: str, method: str,  language: str = None ):
         , id_methods_section, method_section_title{lang} as method_section_title, method_order, method_level, path_order, sort_value
         , id_indicator, indicator_code, indicator_name{lang} as indicator_name, indicator_description{lang} as indicator_description, indicator_category, indicator_data_type, indicator_unit
         , str_gender, str_value
+        , id_project, project_name
         from external.answers_calc_agg a
          where 1=1 
          and a.is_direct_indicator
          and a.id_indicator is not null
         and a.id_campaign = '{campaign}'
         and a.id_method ='{method}'
+        {orga}
+        {prj}
         order by a.id_organization, path_order, indicator_code
     """
     cols = ['id_campaign', 'campaign_name', 'year'
@@ -183,7 +192,7 @@ def get_review_answers(db, campaign: str, method: str,  language: str = None ):
         , 'id_methods_section', 'method_section_title', 'method_order', 'method_level', 'path_order', 'sort_value'
         , 'id_indicator', 'indicator_code', 'indicator_name', 'indicator_description', 'indicator_category',
             'indicator_data_type', 'indicator_unit'
-        , 'str_gender', 'str_value']
+        , 'str_gender', 'str_value', 'id_project', 'project_name']
     conn = db.bind
     df = querytodataframe(qry, cols, conn)
 
@@ -191,7 +200,7 @@ def get_review_answers(db, campaign: str, method: str,  language: str = None ):
         for x in df['indicator_code'].unique():
             df1 = df.loc[df['indicator_code'] == x
             , ['indicator_name'
-                , 'organization_name', 'vat_number', 'user_email'
+                , 'organization_name', 'vat_number', 'user_email', 'project_name'
                 , 'survey_created_at', 'survey_updated_at'
                 , 'str_gender', 'str_value']]
             df1.to_excel(writer, sheet_name=x, index=False)
@@ -200,8 +209,11 @@ def get_review_answers(db, campaign: str, method: str,  language: str = None ):
 
 
 
-def get_export_answers(db, campaign: str, method: str,  language: str = None ):
+def get_export_answers(db, campaign: str, method: str, organization: str = None, project: str = None, language: str = None ):
     lang = ("_"+language) if language is not None else ""
+    orga = f" and ac.id_organization='{organization}'" if organization is not None else ""
+    prj = f" and ac.id_project='{project}'" if project is not None else ""
+    prjcols = ", id_project, project_name " if project is not None else ""
     qry = f"""
         with res as (
             select  ac.campaign_name{lang} as campaign_name, ac."year", id_campaign
@@ -210,6 +222,7 @@ def get_export_answers(db, campaign: str, method: str,  language: str = None ):
                 , ac.method_section_title{lang} as method_section_title , ac.path_order 
                 , ac.id_indicator, ac.indicator_code , ac.indicator_name{lang} as indicator_name
                 , ac.is_direct_indicator , ac.indicator_category , ac.indicator_data_type 
+                {prjcols}
                 , unnest(translate(ac.str_gender, '[]', '{{}}')::text[]) gender
                 , ac.str_value{lang} as str_value
                 , unnest((case 
@@ -220,10 +233,13 @@ def get_export_answers(db, campaign: str, method: str,  language: str = None ):
             where 1=1
                 and ac.id_campaign ='{campaign}'
                 and ac.id_method ='{method}'
+                {orga}
+                {prj}
             order by ac.path_order , indicator_code, gender
             )
             select id_campaign, campaign_name, "year"
                 , id_organization, vat_number, organization_name
+                {prjcols}
                 , id_method, method_name
                 , method_section_title, path_order
                 , id_indicator, indicator_code, indicator_name, is_direct_indicator, indicator_category, indicator_data_type
@@ -232,10 +248,12 @@ def get_export_answers(db, campaign: str, method: str,  language: str = None ):
             order by res.vat_number, path_order, is_direct_indicator, indicator_code, classificacio   
     """
 
-    cols = ['id_campaign', 'campaign_name', '"year"', 'id_organization', 'vat_number', 'organization_name'
-        , 'id_method', 'method_name', 'method_section_title'
+    cols = ['id_campaign', 'campaign_name', '"year"', 'id_organization', 'vat_number', 'organization_name' ]
+    if project is not None:
+        cols.extend(['id_project', 'project_name'])
+    cols.extend(['id_method', 'method_name', 'method_section_title'
         , 'path_order', 'id_indicator', 'indicator_code', 'indicator_name', 'is_direct_indicator', 'indicator_category',
-            'indicator_data_type', 'classificacio', 'valor']
+            'indicator_data_type', 'classificacio', 'valor'])
 
     conn = db.bind
     df = querytodataframe(qry, cols, conn)

@@ -139,25 +139,29 @@ def create_user(user: schemas.ApiUserCreate, db: Session = Depends(get_db)
 def answers(
         organization: str,
         campaign: str,
+        method: str,
+        project: str = None,
         language: str = None,
         direct_indicators: bool = True,
         # current_user: schemas.ApiUser = Depends(get_current_active_user),
         db: Session = Depends(get_db)
 ):
-    return crud.get_answers(db, organization=organization, campaign=campaign, language=language, direct_indicators=direct_indicators)
+    return crud.get_answers(db, organization=organization, project=project, method=method, campaign=campaign, language=language, direct_indicators=direct_indicators)
 
 
 @app.get("/review-answers", tags=["Data"])
 def answers(
         campaign: str,
         method: str,
+        organization: str = None,
+        project: str = None,
         language: str = None,
         # current_user: schemas.ApiUser = Depends(get_current_active_user),
         db: Session = Depends(get_db)
 ):
-    file = crud.get_review_answers(db, campaign=campaign, method=method, language=language)
+    file = crud.get_review_answers(db, campaign=campaign, method=method, organization=organization, project=project, language=language)
     headers = {'Content-Disposition': 'attachment; filename="' + file + '"'}
-    return FileResponse(crud.get_review_answers(db, campaign=campaign, method=method, language=language),
+    return FileResponse(crud.get_review_answers(db, campaign=campaign, method=method, organization=organization, project=project, language=language),
                         headers=headers)
 
 
@@ -165,11 +169,13 @@ def answers(
 def answers(
         campaign: str,
         method: str,
+        organization: str = None,
+        project: str = None,
         language: str = None,
         # current_user: schemas.ApiUser = Depends(get_current_active_user),
         db: Session = Depends(get_db)
 ):
-    file = crud.get_export_answers(db, campaign=campaign, method=method, language=language)
+    file = crud.get_export_answers(db, campaign=campaign, method=method, organization=organization, project=project, language=language)
     headers = {'Content-Disposition': 'attachment; filename="' + file + '"'}
-    return FileResponse(crud.get_export_answers(db, campaign=campaign, method=method, language=language),
+    return FileResponse(crud.get_export_answers(db, campaign=campaign, method=method, organization=organization, project=project, language=language),
                         headers=headers)

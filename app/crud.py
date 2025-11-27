@@ -258,10 +258,14 @@ def get_export_answers(db, campaign: str, method: str, organization: str = None,
     conn = db.bind
     df = querytodataframe(qry, cols, conn)
 
+    colsexcel = [df.vat_number, df.organization_name]
+    if project is not None:
+        colsexcel.append(df.project_name)
+
     ct = pd.crosstab(
         index=[df.path_order, df.method_section_title, df.method_name, df.is_direct_indicator, df.indicator_code,
                df.indicator_name, df.classificacio]
-        , columns=[df.vat_number, df.organization_name], values=df.valor, aggfunc="min")
+        , columns=colsexcel, values=df.valor, aggfunc="min")
 
     # print(ct)
     #

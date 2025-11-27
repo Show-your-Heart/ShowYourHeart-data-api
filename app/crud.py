@@ -197,12 +197,12 @@ def get_review_answers(db, campaign: str, method: str, organization: str = None,
     df = querytodataframe(qry, cols, conn)
 
     excelcolumns =  ['indicator_name'
-                , 'organization_name', 'vat_number', 'user_email', 'project_name'
+                , 'organization_name', 'vat_number', 'user_email'
                 , 'survey_created_at', 'survey_updated_at'
                 , 'str_gender', 'str_value']
     if project is not None:
         excelcolumns = ['indicator_name'
-            , 'organization_name', 'vat_number', 'project', 'user_email', 'project_name'
+            , 'organization_name', 'vat_number', 'project_name', 'user_email'
             , 'survey_created_at', 'survey_updated_at'
             , 'str_gender', 'str_value']
 

@@ -95,7 +95,7 @@ def get_answers(db, organization:str, campaign: str, method: str, project: str =
         , survey as  (select distinct id_campaign, id_survey,survey_created_at, survey_updated_at,status 
             , id_organization, organization_name, vat_number, id_project, project_name 
             from res)
-        , method as  (select distinct id_campaign, id_survey, id_method, active, method_name{lang} as method_name, method_description{lang} as method_description
+        , method as  (select distinct id_campaign, id_survey, id_method, method_name{lang} as method_name, method_description{lang} as method_description
             from res)	
         , method_section as  (select distinct id_campaign, id_survey, id_method, id_methods_section, method_section_title{lang} as method_section_title, path_order, method_level
             from res

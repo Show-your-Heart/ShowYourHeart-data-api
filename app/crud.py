@@ -65,7 +65,7 @@ def create_access_token(data: dict, expires_delta: Optional[datetime.timedelta] 
 
 def get_answers(db, organization:str, campaign: str, method: str, project: str = None, language: str = None, direct_indicators: bool = True ):
     lang = ("_"+language) if language is not None else ""
-    prj = f" and a.id_project='{project}'" if project is not None else ""
+    prj = f" and a.id_project='{project}'" if project is not None and project!='' else ""
     dr = ' and a.is_direct_indicator' if direct_indicators else 'and not a.is_direct_indicator'
     qry = f"""
         with res as (
@@ -165,7 +165,7 @@ def get_answers(db, organization:str, campaign: str, method: str, project: str =
 def get_review_answers(db, campaign: str, method: str, organization: str = None, project: str = None, language: str = None ):
     lang = ("_"+language) if language is not None else ""
     orga = f" and a.id_organization='{organization}'" if organization is not None else ""
-    prj = f" and a.id_project='{project}'" if project is not None else ""
+    prj = f" and a.id_project='{project}'" if project is not None and project!='' else ""
     qry = f"""
         select id_campaign, campaign_name{lang} as campaign_name, "year"
         , id_survey, survey_created_at::timestamp without time zone, survey_updated_at::timestamp without time zone, status
@@ -219,8 +219,8 @@ def get_review_answers(db, campaign: str, method: str, organization: str = None,
 def get_export_answers(db, campaign: str, method: str, organization: str = None, project: str = None, language: str = None ):
     lang = ("_"+language) if language is not None else ""
     orga = f" and ac.id_organization='{organization}'" if organization is not None else ""
-    prj = f" and ac.id_project='{project}'" if project is not None else ""
-    prjcols = ", id_project, project_name " if project is not None else ""
+    prj = f" and ac.id_project='{project}'" if project is not None and project!='' else ""
+    prjcols = ", id_project, project_name " if project is not None and project!='' else ""
     qry = f"""
         with res as (
             select  ac.campaign_name{lang} as campaign_name, ac."year", id_campaign

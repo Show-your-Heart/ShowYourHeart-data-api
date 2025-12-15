@@ -200,7 +200,7 @@ def get_review_answers(db, campaign: str, method: str, organization: str = None,
                 , 'organization_name', 'vat_number', 'user_email'
                 , 'survey_created_at', 'survey_updated_at'
                 , 'str_gender', 'str_value']
-    if project is not None:
+    if project is not None and project!='':
         excelcolumns = ['indicator_name'
             , 'organization_name', 'vat_number', 'project_name', 'user_email'
             , 'survey_created_at', 'survey_updated_at'
@@ -256,7 +256,7 @@ def get_export_answers(db, campaign: str, method: str, organization: str = None,
     """
 
     cols = ['id_campaign', 'campaign_name', '"year"', 'id_organization', 'vat_number', 'organization_name' ]
-    if project is not None:
+    if project is not None and project!='' :
         cols.extend(['id_project', 'project_name'])
     cols.extend(['id_method', 'method_name', 'method_section_title'
         , 'path_order', 'id_indicator', 'indicator_code', 'indicator_name', 'is_direct_indicator', 'indicator_category',
@@ -266,7 +266,7 @@ def get_export_answers(db, campaign: str, method: str, organization: str = None,
     df = querytodataframe(qry, cols, conn)
 
     colsexcel = [df.vat_number, df.organization_name]
-    if project is not None:
+    if project is not None and project!='':
         colsexcel.append(df.project_name)
 
     ct = pd.crosstab(

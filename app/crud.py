@@ -292,3 +292,58 @@ def get_export_answers(db, campaign: str, method: str, organization: str = None,
             worksheet.column_dimensions[column_letter].width = 25
         return f"export_{df.iloc[1]['campaign_name']}-{df.iloc[1]['method_name'].replace('/','_')}.xlsx"
 
+
+
+
+
+
+def get_export_entities(db, region1: str = None, language: str = None ):
+    lang = ("_"+language) if language is not None else ""
+    reg1 = f" and sga.id='{region1}'" if region1 is not None else ""
+
+    qry = f"""
+        select o.vat_number as "NIF", o."name" as "Nombre"
+        , u.email as email
+        , sga.name{lang} as ccaa 
+        , o.bs_allow_public as resultados_publicos
+        , o.logo
+        , lp.name{lang} as forma_juridica_principal
+        , ssl.name{lang} as forma_juridica_secundaria
+        --, null as "Sector principal"
+        --,*
+        from syh_organizations_organization o
+        join syh_settings_legalstructure ssl on o.legal_structure_id = ssl.id
+        left join syh_settings_legalstructure lp on ssl.parent_id=lp.id
+        join syh_users_userprofile up on up.organization_id=o.id
+        join syh_users_user u on up.user_id=u.id
+        join syh_geodata_region1 sga on o.region1_id = sga.id 
+        where 1=1 
+            {reg1} 
+    """
+
+    cols = ['NIF', 'Nombre', 'email', 'ccaa', 'resultados_publicos', 'logo', 'forma_juridica_principal'
+            ,'forma_juridica_secundaria']
+
+    conn = db.bind
+    df = querytodataframe(qry, cols, conn)
+
+
+    with pd.ExcelWriter(f"export_entidades_{df.iloc[1]['ccaa']}.xlsx") as writer:
+        df.to_excel(writer, sheet_name="Resultats", index=False)
+        worksheet = writer.sheets['Resultats']
+        worksheet["E1"] = "Quiero hacer públicos los resultados"
+        worksheet["G1"] = "Forma jurídica principal"
+        worksheet["H1"] = "Forma jurídica secundaria"
+        worksheet.column_dimensions['A'].width = 30
+        worksheet.column_dimensions['B'].width = 30
+        worksheet.column_dimensions['C'].width = 30
+        worksheet.column_dimensions['D'].width = 30
+        worksheet.column_dimensions['E'].width = 30
+        worksheet.column_dimensions['F'].width = 30
+        worksheet.column_dimensions['G'].width = 30
+
+        for col in range(8, 4000):
+            column_letter = get_column_letter(col)
+            worksheet.column_dimensions[column_letter].width = 25
+        return f"export_entidades_{df.iloc[1]['ccaa']}.xlsx"
+

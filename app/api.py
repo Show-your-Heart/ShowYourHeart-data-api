@@ -179,3 +179,16 @@ def answers(
     headers = {'Content-Disposition': 'attachment; filename="' + file + '"'}
     return FileResponse(crud.get_export_answers(db, campaign=campaign, method=method, organization=organization, project=project, language=language),
                         headers=headers)
+
+
+@app.get("/export-entities", tags=["Data"])
+def entities(
+        region1: str = None,
+        language: str = None,
+        # current_user: schemas.ApiUser = Depends(get_current_active_user),
+        db: Session = Depends(get_db)
+):
+    file = crud.get_export_entities(db, region1=region1, language=language)
+    headers = {'Content-Disposition': 'attachment; filename="' + file + '"'}
+    return FileResponse(crud.get_export_entities(db, region1=region1, language=language),
+                        headers=headers)

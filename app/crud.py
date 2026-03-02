@@ -347,3 +347,43 @@ def get_export_entities(db, region1: str = None, language: str = None ):
             worksheet.column_dimensions[column_letter].width = 25
         return f"export_entidades_{df.iloc[1]['ccaa']}.xlsx"
 
+
+def get_export_entities_web(db, network_type: str = None, language: str = None ):
+    lang = ("_"+language) if language is not None else ""
+    network = f" and network_type='{network_type}'" if network_type is not None else ""
+
+    qry = f"""
+        select o.vat_number as nif, o.name, o.description, o.website, o.address, o.longitude, o.latitude
+        , z.code  as zip
+        , u.email as email
+        , ci.name{lang} as town
+        , r2.name{lang} as province
+        ,  ARRAY_AGG(distinct s.name{lang}) as sectors
+        , ARRAY_AGG(distinct n.name{lang}) as associations
+        , logo
+        , bs_allow_public
+        from syh_organizations_organization o
+        left join syh_organizations_organization_sectors so on so.organization_id = o.id 
+        left join syh_settings_sector s on so.sector_id = s.id 
+        left join syh_geodata_city ci on ci.id = o.city_id 
+        left join syh_geodata_region2 r2 on ci.region2_id  = r2.id
+        left join syh_geodata_zipcode z on o.zip_code_id = z.id 
+        join syh_users_userprofile up on up.organization_id=o.id
+        join syh_users_user u on up.user_id=u.id
+        left join syh_settings_network_organizations no on no.organization_id = o.id 
+        left join syh_settings_network n on n.id = no.network_id 
+        where 1=1
+            {network}
+        group by o.vat_number, o.name, o.description, o.website, o.address, o.longitude, o.latitude
+        , z.code  
+        , u.email 
+        , ci.name{lang} 
+        , r2.name{lang}
+        , logo
+        , bs_allow_public
+    """
+
+    registries = db.execute(text(qry))
+    columns = ['nif', 'name', 'description', 'website', 'address', 'longitude', 'latitude', 'zip', 'email', 'town', 'province', 'sectors', 'associations', 'logo', 'bs_allow_public']
+    return [dict(zip(columns, t)) for t in registries]
+

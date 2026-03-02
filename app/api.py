@@ -192,3 +192,15 @@ def entities(
     headers = {'Content-Disposition': 'attachment; filename="' + file + '"'}
     return FileResponse(crud.get_export_entities(db, region1=region1, language=language),
                         headers=headers)
+
+
+
+@app.get("/export-entities-web", tags=["Data"])
+def entities(
+        network_type: str = None,
+        language: str = None,
+        # current_user: schemas.ApiUser = Depends(get_current_active_user),
+        db: Session = Depends(get_db)
+):
+    return crud.get_export_entities_web(db, network_type=network_type, language=language)
+

@@ -359,7 +359,7 @@ def get_export_entities_web(db, network_type: str = None, language: str = None )
         , ci.name{lang} as town
         , r2.name{lang} as province
         ,  ARRAY_AGG(distinct s.name{lang}) as sectors
-        , ARRAY_AGG(distinct n.name{lang}) as associations
+        , ARRAY_AGG(distinct n.name) as associations
         , logo
         , bs_allow_public
         from syh_organizations_organization o

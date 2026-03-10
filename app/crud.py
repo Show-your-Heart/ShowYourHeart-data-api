@@ -381,6 +381,7 @@ def get_export_entities_web(db, network_type: str = None, language: str = None )
         , u.email 
         , ci.name{lang} 
         , r2.name{lang}
+        , r1.name{lang}
         , logo
         , bs_allow_public
     """

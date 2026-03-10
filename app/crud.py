@@ -358,6 +358,7 @@ def get_export_entities_web(db, network_type: str = None, language: str = None )
         , u.email as email
         , ci.name{lang} as town
         , r2.name{lang} as province
+        , r1.name{lang} as autonomous_community
         ,  ARRAY_AGG(distinct s.name{lang}) as sectors
         , ARRAY_AGG(distinct n.name) as associations
         , logo
@@ -371,7 +372,8 @@ def get_export_entities_web(db, network_type: str = None, language: str = None )
         join syh_users_userprofile up on up.organization_id=o.id
         join syh_users_user u on up.user_id=u.id
         left join syh_settings_network_organizations no on no.organization_id = o.id 
-        left join syh_settings_network n on n.id = no.network_id 
+        left join syh_settings_network n on n.id = no.network_id
+        left join syh_geodata_region1 r1 on o.region1_id  = r1.id
         where 1=1
             {network}
         group by o.vat_number, o.name, o.description, o.website, o.address, o.longitude, o.latitude

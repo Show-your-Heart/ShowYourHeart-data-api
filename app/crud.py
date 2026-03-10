@@ -387,6 +387,6 @@ def get_export_entities_web(db, network_type: str = None, language: str = None )
     """
 
     registries = db.execute(text(qry))
-    columns = ['nif', 'name', 'description', 'website', 'address', 'longitude', 'latitude', 'zip', 'email', 'town', 'province', 'sectors', 'associations', 'logo', 'bs_allow_public']
+    columns = ['nif', 'name', 'description', 'website', 'address', 'longitude', 'latitude', 'zip', 'email', 'town', 'province', 'autonomous_community', 'sectors', 'associations', 'logo', 'bs_allow_public']
     return [dict(zip(columns, t)) for t in registries]
 

@@ -1,3 +1,6 @@
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+
 import datetime
 from jose import JWTError, jwt
 import pandas as pd
@@ -108,7 +111,7 @@ def get_answers(db, organization:str, campaign: str, method: str, project: str =
             , gender, value, str_gender, str_value{lang} as str_value
             , prev_gender, prev_value, prev_str_gender, prev_str_value{lang} as prev_str_value
             from res)		
-        SELECT json_agg(t) 
+        SELECT json_agg(t) as json_agg
         from (
             select c.id_campaign, c.campaign_name 
                 , (
@@ -158,8 +161,8 @@ def get_answers(db, organization:str, campaign: str, method: str, project: str =
     """
 
     registries = db.execute(text(qry))
-    return registries.fetchone()["json_agg"]
-
+    row = registries.fetchone()
+    return JSONResponse(content=jsonable_encoder(dict(row._mapping))["json_agg"]
 
 
 def get_review_answers(db, campaign: str, method: str, organization: str = None, project: str = None, language: str = None ):

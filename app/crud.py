@@ -162,7 +162,7 @@ def get_answers(db, organization:str, campaign: str, method: str, project: str =
 
     registries = db.execute(text(qry))
     row = registries.fetchone()
-    return JSONResponse(content=jsonable_encoder(dict(row._mapping))["json_agg"]
+    return JSONResponse(content=jsonable_encoder(dict(row._mapping)))["json_agg"]
 
 
 def get_review_answers(db, campaign: str, method: str, organization: str = None, project: str = None, language: str = None ):

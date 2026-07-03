@@ -4,7 +4,7 @@ from fastapi.encoders import jsonable_encoder
 import datetime
 from jose import JWTError, jwt
 import pandas as pd
-from  coopdevsutils import querytodataframe
+from coopdevsutils import querytodataframe
 
 from sqlalchemy.orm import Session
 from typing import Optional
@@ -65,10 +65,10 @@ def create_access_token(data: dict, expires_delta: Optional[datetime.timedelta] 
     return encoded_jwt
 
 
-
-def get_answers(db, organization:str, campaign: str, method: str, project: str = None, language: str = None, direct_indicators: bool = True ):
-    lang = ("_"+language) if language is not None else ""
-    prj = f" and a.id_project='{project}'" if project is not None and project!='' else ""
+def get_answers(db, organization: str, campaign: str, method: str, project: str = None, language: str = None,
+                direct_indicators: bool = True):
+    lang = ("_" + language) if language is not None else ""
+    prj = f" and a.id_project='{project}'" if project is not None and project != '' else ""
     dr = ' and a.is_direct_indicator' if direct_indicators else 'and not a.is_direct_indicator'
     qry = f"""
         with res as (
@@ -165,10 +165,25 @@ def get_answers(db, organization:str, campaign: str, method: str, project: str =
     return JSONResponse(content=jsonable_encoder(dict(row._mapping)))["json_agg"]
 
 
-def get_review_answers(db, campaign: str, method: str, organization: str = None, project: str = None, language: str = None ):
-    lang = ("_"+language) if language is not None else ""
+def get_review_answers(db
+                       , campaign: str
+                       , method: str
+                       , organization: str = None
+                       , project: str = None
+                       , network: str = None
+                       , language: str = None):
+    lang = ("_" + language) if language is not None else ""
     orga = f" and a.id_organization='{organization}'" if organization is not None else ""
-    prj = f" and a.id_project='{project}'" if project is not None and project!='' else ""
+    prj = f" and a.id_project='{project}'" if project is not None and project != '' else ""
+    net = f"""
+        and exists (
+            select *
+            from syh_settings_network_organizations n
+            where a.id_organization = n.organization_id 
+                and n.network_id={network}
+
+        """ if network is not None else ""
+
     qry = f"""
         select id_campaign, campaign_name{lang} as campaign_name, "year"
         , id_survey, survey_created_at::timestamp without time zone, survey_updated_at::timestamp without time zone, status
@@ -186,6 +201,7 @@ def get_review_answers(db, campaign: str, method: str, organization: str = None,
         and a.id_method ='{method}'
         {orga}
         {prj}
+        {net}
         order by a.id_organization, path_order, indicator_code
     """
     cols = ['id_campaign', 'campaign_name', 'year'
@@ -199,31 +215,29 @@ def get_review_answers(db, campaign: str, method: str, organization: str = None,
     conn = db.bind
     df = querytodataframe(qry, cols, conn)
 
-    excelcolumns =  ['indicator_name'
-                , 'organization_name', 'vat_number', 'user_email'
-                , 'survey_created_at', 'survey_updated_at'
-                , 'str_gender', 'str_value']
-    if project is not None and project!='':
+    excelcolumns = ['indicator_name'
+        , 'organization_name', 'vat_number', 'user_email'
+        , 'survey_created_at', 'survey_updated_at'
+        , 'str_gender', 'str_value']
+    if project is not None and project != '':
         excelcolumns = ['indicator_name'
             , 'organization_name', 'vat_number', 'project_name', 'user_email'
             , 'survey_created_at', 'survey_updated_at'
             , 'str_gender', 'str_value']
 
-
-    with pd.ExcelWriter(f"{df.iloc[1]['campaign_name']}-{df.iloc[1]['method_name'].replace('/','_')}.xlsx") as writer:
+    with pd.ExcelWriter(f"{df.iloc[1]['campaign_name']}-{df.iloc[1]['method_name'].replace('/', '_')}.xlsx") as writer:
         for x in df['indicator_code'].unique():
             df1 = df.loc[df['indicator_code'] == x, excelcolumns]
             df1.to_excel(writer, sheet_name=x, index=False)
         return f"{df.iloc[1]['campaign_name']}-{df.iloc[1]['method_name']}.xlsx"
 
 
-
-
-def get_export_answers(db, campaign: str, method: str, organization: str = None, project: str = None, language: str = None ):
-    lang = ("_"+language) if language is not None else ""
+def get_export_answers(db, campaign: str, method: str, organization: str = None, project: str = None,
+                       language: str = None):
+    lang = ("_" + language) if language is not None else ""
     orga = f" and ac.id_organization='{organization}'" if organization is not None else ""
-    prj = f" and ac.id_project='{project}'" if project is not None and project!='' else ""
-    prjcols = ", id_project, project_name " if project is not None and project!='' else ""
+    prj = f" and ac.id_project='{project}'" if project is not None and project != '' else ""
+    prjcols = ", id_project, project_name " if project is not None and project != '' else ""
     qry = f"""
         with res as (
             select  ac.campaign_name{lang} as campaign_name, ac."year", id_campaign
@@ -258,18 +272,19 @@ def get_export_answers(db, campaign: str, method: str, organization: str = None,
             order by res.vat_number, path_order, is_direct_indicator, indicator_code, classificacio   
     """
 
-    cols = ['id_campaign', 'campaign_name', '"year"', 'id_organization', 'vat_number', 'organization_name' ]
-    if project is not None and project!='' :
+    cols = ['id_campaign', 'campaign_name', '"year"', 'id_organization', 'vat_number', 'organization_name']
+    if project is not None and project != '':
         cols.extend(['id_project', 'project_name'])
     cols.extend(['id_method', 'method_name', 'method_section_title'
-        , 'path_order', 'id_indicator', 'indicator_code', 'indicator_name', 'is_direct_indicator', 'indicator_category',
-            'indicator_data_type', 'classificacio', 'valor'])
+                    , 'path_order', 'id_indicator', 'indicator_code', 'indicator_name', 'is_direct_indicator',
+                 'indicator_category',
+                 'indicator_data_type', 'classificacio', 'valor'])
 
     conn = db.bind
     df = querytodataframe(qry, cols, conn)
 
     colsexcel = [df.vat_number, df.organization_name]
-    if project is not None and project!='':
+    if project is not None and project != '':
         colsexcel.append(df.project_name)
 
     ct = pd.crosstab(
@@ -279,7 +294,8 @@ def get_export_answers(db, campaign: str, method: str, organization: str = None,
 
     # print(ct)
     #
-    with pd.ExcelWriter(f"export_{df.iloc[1]['campaign_name']}-{df.iloc[1]['method_name'].replace('/','_')}.xlsx") as writer:
+    with pd.ExcelWriter(
+            f"export_{df.iloc[1]['campaign_name']}-{df.iloc[1]['method_name'].replace('/', '_')}.xlsx") as writer:
         ct.to_excel(writer, sheet_name="Resultats")
         worksheet = writer.sheets['Resultats']
         worksheet.column_dimensions['A'].hidden = True
@@ -293,15 +309,11 @@ def get_export_answers(db, campaign: str, method: str, organization: str = None,
         for col in range(8, 4000):
             column_letter = get_column_letter(col)
             worksheet.column_dimensions[column_letter].width = 25
-        return f"export_{df.iloc[1]['campaign_name']}-{df.iloc[1]['method_name'].replace('/','_')}.xlsx"
+        return f"export_{df.iloc[1]['campaign_name']}-{df.iloc[1]['method_name'].replace('/', '_')}.xlsx"
 
 
-
-
-
-
-def get_export_entities(db, region1: str = None, language: str = None ):
-    lang = ("_"+language) if language is not None else ""
+def get_export_entities(db, region1: str = None, language: str = None):
+    lang = ("_" + language) if language is not None else ""
     reg1 = f" and sga.id='{region1}'" if region1 is not None else ""
 
     qry = f"""
@@ -325,11 +337,10 @@ def get_export_entities(db, region1: str = None, language: str = None ):
     """
 
     cols = ['NIF', 'Nombre', 'email', 'ccaa', 'resultados_publicos', 'logo', 'forma_juridica_principal'
-            ,'forma_juridica_secundaria']
+        , 'forma_juridica_secundaria']
 
     conn = db.bind
     df = querytodataframe(qry, cols, conn)
-
 
     with pd.ExcelWriter(f"export_entidades_{df.iloc[1]['ccaa']}.xlsx") as writer:
         df.to_excel(writer, sheet_name="Resultats", index=False)
@@ -351,8 +362,8 @@ def get_export_entities(db, region1: str = None, language: str = None ):
         return f"export_entidades_{df.iloc[1]['ccaa']}.xlsx"
 
 
-def get_export_entities_web(db, network_type: str = None, language: str = None ):
-    lang = ("_"+language) if language is not None else ""
+def get_export_entities_web(db, network_type: str = None, language: str = None):
+    lang = ("_" + language) if language is not None else ""
     network = f" and network_type='{network_type}'" if network_type is not None else ""
 
     qry = f"""
@@ -390,6 +401,6 @@ def get_export_entities_web(db, network_type: str = None, language: str = None )
     """
 
     registries = db.execute(text(qry))
-    columns = ['nif', 'name', 'description', 'website', 'address', 'longitude', 'latitude', 'zip', 'email', 'town', 'province', 'autonomous_community', 'sectors', 'associations', 'logo', 'bs_allow_public']
+    columns = ['nif', 'name', 'description', 'website', 'address', 'longitude', 'latitude', 'zip', 'email', 'town',
+               'province', 'autonomous_community', 'sectors', 'associations', 'logo', 'bs_allow_public']
     return [dict(zip(columns, t)) for t in registries]
-

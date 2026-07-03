@@ -155,6 +155,7 @@ def answers(
         method: str,
         organization: str = None,
         project: str = None,
+        network: str = None,
         language: str = None,
         # current_user: schemas.ApiUser = Depends(get_current_active_user),
         db: Session = Depends(get_db)

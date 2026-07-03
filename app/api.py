@@ -160,10 +160,13 @@ def answers(
         # current_user: schemas.ApiUser = Depends(get_current_active_user),
         db: Session = Depends(get_db)
 ):
-    file = crud.get_review_answers(db, campaign=campaign, method=method, organization=organization, project=project, language=language)
+    file = crud.get_review_answers(db, campaign=campaign, method=method, organization=organization, project=project,
+                                   language=language, network=network)
     headers = {'Content-Disposition': 'attachment; filename="' + file + '"'}
-    return FileResponse(crud.get_review_answers(db, campaign=campaign, method=method, organization=organization, project=project, language=language),
-                        headers=headers)
+    return FileResponse(
+        crud.get_review_answers(db, campaign=campaign, method=method, organization=organization, project=project,
+                                language=language, network=network),
+        headers=headers)
 
 
 @app.get("/export-answers", tags=["Data"])
@@ -172,14 +175,18 @@ def answers(
         method: str,
         organization: str = None,
         project: str = None,
+        network: str = None,
         language: str = None,
         # current_user: schemas.ApiUser = Depends(get_current_active_user),
         db: Session = Depends(get_db)
 ):
-    file = crud.get_export_answers(db, campaign=campaign, method=method, organization=organization, project=project, language=language)
+    file = crud.get_export_answers(db, campaign=campaign, method=method, organization=organization, project=project,
+                                   language=language, network=network)
     headers = {'Content-Disposition': 'attachment; filename="' + file + '"'}
-    return FileResponse(crud.get_export_answers(db, campaign=campaign, method=method, organization=organization, project=project, language=language),
-                        headers=headers)
+    return FileResponse(
+        crud.get_export_answers(db, campaign=campaign, method=method, organization=organization, project=project,
+                                language=language, network=network),
+        headers=headers)
 
 
 @app.get("/export-entities", tags=["Data"])

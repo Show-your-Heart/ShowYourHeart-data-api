@@ -232,12 +232,23 @@ def get_review_answers(db
         return f"{df.iloc[1]['campaign_name']}-{df.iloc[1]['method_name']}.xlsx"
 
 
-def get_export_answers(db, campaign: str, method: str, organization: str = None, project: str = None,
+def get_export_answers(db, campaign: str, method: str
+                       , organization: str = None
+                       , network: str = None
+                       , project: str = None,
                        language: str = None):
     lang = ("_" + language) if language is not None else ""
     orga = f" and ac.id_organization='{organization}'" if organization is not None else ""
     prj = f" and ac.id_project='{project}'" if project is not None and project != '' else ""
     prjcols = ", id_project, project_name " if project is not None and project != '' else ""
+    net = f"""
+            and exists (
+                select *
+                from syh_settings_network_organizations n
+                where ac.id_organization = n.organization_id 
+                    and n.network_id={network}
+
+            """ if network is not None else ""
     qry = f"""
         with res as (
             select  ac.campaign_name{lang} as campaign_name, ac."year", id_campaign
@@ -259,6 +270,7 @@ def get_export_answers(db, campaign: str, method: str, organization: str = None,
                 and ac.id_method ='{method}'
                 {orga}
                 {prj}
+                {net}
             order by ac.path_order , indicator_code, gender
             )
             select id_campaign, campaign_name, "year"

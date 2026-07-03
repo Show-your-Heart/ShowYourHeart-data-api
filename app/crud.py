@@ -181,7 +181,7 @@ def get_review_answers(db
             from syh_settings_network_organizations n
             where a.id_organization = n.organization_id 
                 and n.network_id='{network}'
-
+            )
         """ if network is not None else ""
 
     qry = f"""
@@ -247,7 +247,7 @@ def get_export_answers(db, campaign: str, method: str
                 from syh_settings_network_organizations n
                 where ac.id_organization = n.organization_id 
                     and n.network_id='{network}'
-
+            )
             """ if network is not None else ""
     qry = f"""
         with res as (

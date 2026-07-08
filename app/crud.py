@@ -162,7 +162,7 @@ def get_answers(db, organization: str, campaign: str, method: str, project: str 
 
     registries = db.execute(text(qry))
     row = registries.fetchone()
-    return JSONResponse(content=jsonable_encoder(dict(row._mapping)))["json_agg"]
+    return JSONResponse(content=jsonable_encoder(dict(row._mapping))["json_agg"])
 
 
 def get_review_answers(db
@@ -247,7 +247,7 @@ def get_export_answers(db, campaign: str, method: str
                 from syh_settings_network_organizations n
                 where ac.id_organization = n.organization_id 
                     and n.network_id='{network}'
-            )
+            )   
             """ if network is not None else ""
     qry = f"""
         with res as (
@@ -298,6 +298,9 @@ def get_export_answers(db, campaign: str, method: str
     colsexcel = [df.vat_number, df.organization_name]
     if project is not None and project != '':
         colsexcel.append(df.project_name)
+
+    convert_dict = {'valor': str}
+    df = df.astype(convert_dict)
 
     ct = pd.crosstab(
         index=[df.path_order, df.method_section_title, df.method_name, df.is_direct_indicator, df.indicator_code,

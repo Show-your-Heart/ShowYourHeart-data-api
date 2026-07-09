@@ -68,7 +68,7 @@ def create_access_token(data: dict, expires_delta: Optional[datetime.timedelta] 
 def get_answers(db, organization: str, campaign: str, method: str, project: str = None, language: str = None,
                 direct_indicators: bool = True):
     lang = ("_" + language) if language is not None else ""
-    prj = f" and a.id_project='{project}'" if project is not None and project != '' else ""
+    prj = f" and a.id_project='{project}'" if project is not None and project != '' else " and a.id_project is null"
     dr = ' and a.is_direct_indicator' if direct_indicators else 'and not a.is_direct_indicator'
     qry = f"""
         with res as (

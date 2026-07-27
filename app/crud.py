@@ -298,6 +298,8 @@ def get_export_answers(db, campaign: str, method: str
                  , id_project as id_project, coalesce(project_name,'') as project_name
              from external.answers_calc_agg ac
              where 1=1
+                and ac.id_campaign ='{campaign}'
+                and ac.id_method ='{method}'
                 {orga}
                 {prj}
         )

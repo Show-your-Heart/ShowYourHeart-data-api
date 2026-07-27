@@ -84,6 +84,7 @@ def get_answers(db, organization: str, campaign: str, method: str, project: str 
                 , p.gender as prev_gender
                 , p.value as prev_value
                 , p.str_gender as prev_str_gender
+                , p.str_list as prev_str_list, p.str_list_en as prev_str_list_en, p.str_list_ca as prev_str_list_ca, p.str_list_es as prev_str_list_es, p.str_list_eu as prev_str_list_eu, p.str_list_gl as prev_str_list_gl, p.str_list_nl as prev_str_list_nl
                 , p.str_value as prev_str_value, p.str_value_en as prev_str_value_en, p.str_value_ca as prev_str_value_ca, p.str_value_es as prev_str_value_es, p.str_value_eu as prev_str_value_eu, p.str_value_gl as prev_str_value_gl, p.str_value_nl as prev_str_value_nl
                 from external.answers_calc_agg a
                 left join external.answers_calc_agg p on a.id_organization = p.id_organization and a.previous_campaign_id  = p.id_campaign 

@@ -249,7 +249,7 @@ def get_export_answers(db, campaign: str, method: str
     orga = f" and ac.id_organization='{organization}'" if organization is not None else ""
     prj = f" and ac.id_project='{project}'" if project is not None and project != '' else ""
     # prjcols = ", id_project, project_name " if project is not None and project != '' else ""
-    prjcols = ", coalesce(id_project,'') as id_project, coalesce(project_name,'') as project_name "
+    prjcols = ", id_project as id_project, coalesce(project_name,'') as project_name "
     net = f"""
             and exists (
                 select *

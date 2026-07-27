@@ -281,48 +281,17 @@ def get_export_answers(db, campaign: str, method: str
                 {prj}
                 {net}
             order by ac.path_order , indicator_code, gender
-        )
-        , res_full as (
-            select  ac.campaign_name{lang} as campaign_name, ac."year", id_campaign
-                , ac.id_method,  ac.method_name{lang} as method_name
-                , ac.method_section_title{lang} as method_section_title , ac.path_order 
-                , ac.id_indicator, ac.indicator_code , ac.indicator_name{lang} as indicator_name
-                , ac.is_direct_indicator , ac.indicator_category , ac.indicator_data_type 
-            from external.answers_calc_agg ac 
-            where 1=1
-                and ac.id_campaign ='{campaign}'
-                and ac.id_method ='{method}'
-        )
-         , org as (
-             select distinct ac.vat_number, ac.organization_name, ac.id_organization
-                 , id_project as id_project, coalesce(project_name,'') as project_name
-             from external.answers_calc_agg ac
-             where 1=1
-                and ac.id_campaign ='{campaign}'
-                and ac.id_method ='{method}'
-                {orga}
-                {prj}
-        )
-         select f.id_campaign, f.campaign_name, f."year"
-             , f.id_organization, r.vat_number, f.organization_name
-             , f.id_project as id_project, coalesce(f.project_name,'') as project_name
-             , f.id_method, f.method_name
-             , f.method_section_title, f.path_order
-             , f.id_indicator, f.indicator_code, f.indicator_name, f.is_direct_indicator, f.indicator_category, f.indicator_data_type
-             , str_value, gender
-             , coalesce(case when str_value like '["%%' and gender is null then value else gender end,'') as classificacio
-             , case when str_value like '["%%' and gender is null then '1' else value end as valor
-         from (select * 
-            from res_full f 
-                cross join org) f
-            left join res r on 
-                f.id_campaign = r.id_campaign  
-                    and f.id_method=r.id_method 
-                    and f.method_section_title = r.method_section_title 
-                    and f.id_indicator = r.id_indicator 
-                    and f.id_organization = r.id_organization 
-                    and (f.id_project = r.id_project or f.id_project is null and r.id_project is null)   
-         order by r.vat_number, f.path_order, f.is_direct_indicator, f.indicator_code
+            )
+            select id_campaign, campaign_name, "year"
+                , id_organization, vat_number, organization_name
+                {prjcols}
+                , id_method, method_name
+                , method_section_title, path_order
+                , id_indicator, indicator_code, indicator_name, is_direct_indicator, indicator_category, indicator_data_type
+                , coalesce(case when str_value like '["%%' and gender is null then value else gender end,'') as classificacio
+                , case when str_value like '["%%' and gender is null then '1' else value end as valor
+            from res
+            order by res.vat_number, path_order, is_direct_indicator, indicator_code, classificacio   
     """
 
     cols = ['id_campaign', 'campaign_name', '"year"', 'id_organization', 'vat_number', 'organization_name']

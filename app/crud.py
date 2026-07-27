@@ -78,6 +78,7 @@ def get_answers(db, organization: str, campaign: str, method: str, project: str 
                 , coalesce(a.id_methods_section, 'e2ef801f-adbc-60d2-36d0-0b9f3516ebc7') id_methods_section, a.method_section_title, a.method_section_title_en, a.method_section_title_ca, a.method_section_title_es, a.method_section_title_eu, a.method_section_title_gl, a.method_section_title_nl, a.method_order, a.method_level, a.path_order, a.sort_value
                 , a.id_indicator, a.indicator_code, a.indicator_name, a.indicator_name_en, a.indicator_name_ca, a.indicator_name_es, a.indicator_name_eu, a.indicator_name_gl, a.indicator_name_nl, a.indicator_description, a.indicator_description_en, a.indicator_description_ca, a.indicator_description_es, a.indicator_description_eu, a.indicator_description_gl, a.indicator_description_nl, a.is_direct_indicator, a.indicator_category, a.indicator_data_type, a.indicator_unit, a.gender
                 , a.value, a.num_gender, a.str_gender
+                , a.str_list, a.str_list_en, a.str_list_ca, a.str_list_es, a.str_list_eu, a.str_list_gl, a.str_list_nl
                 , a.str_value, a.str_value_en, a.str_value_ca, a.str_value_es, a.str_value_eu, a.str_value_gl, a.str_value_nl
                 , a.id_project, a.project_name
                 , p.gender as prev_gender
@@ -95,21 +96,28 @@ def get_answers(db, organization: str, campaign: str, method: str, project: str 
         )
         , camp as  (select distinct id_campaign, campaign_name{lang}  as campaign_name
             from res)
-        , survey as  (select distinct id_campaign, id_survey,survey_created_at, survey_updated_at,status 
-            , id_organization, organization_name, vat_number, id_project, project_name 
+        , survey as  (
+            select distinct id_campaign, id_survey,survey_created_at, survey_updated_at,status 
+                , id_organization, organization_name, vat_number, id_project, project_name 
             from res)
-        , method as  (select distinct id_campaign, id_survey, id_method, method_name{lang} as method_name, method_description{lang} as method_description
+        , method as  (
+            select distinct id_campaign, id_survey, id_method, method_name{lang} as method_name
+                , method_description{lang} as method_description
             from res)	
-        , method_section as  (select distinct id_campaign, id_survey, id_method, id_methods_section, method_section_title{lang} as method_section_title, path_order, method_level
+        , method_section as  (
+            select distinct id_campaign, id_survey, id_method, id_methods_section
+                , method_section_title{lang} as method_section_title, path_order, method_level
             from res
             order by path_order
             )	
-        , indicator as  (select distinct id_campaign, id_survey, id_method, id_methods_section, id_indicator, indicator_code, indicator_name{lang} as indicator_name, indicator_description{lang} as indicator_description
-            , is_direct_indicator, indicator_category, indicator_data_type, indicator_unit
+        , indicator as  (
+            select distinct id_campaign, id_survey, id_method, id_methods_section, id_indicator, indicator_code, indicator_name{lang} as indicator_name, indicator_description{lang} as indicator_description
+                , is_direct_indicator, indicator_category, indicator_data_type, indicator_unit
             from res)	
-        , indicator_result as  (select distinct id_campaign, id_survey, id_method, id_methods_section, id_indicator
-            , gender, value, str_gender, str_value{lang} as str_value
-            , prev_gender, prev_value, prev_str_gender, prev_str_value{lang} as prev_str_value
+        , indicator_result as  (
+            select distinct id_campaign, id_survey, id_method, id_methods_section, id_indicator
+                , gender, value, str_gender, str_list{lang} as str_list, str_value{lang} as str_value
+                , prev_gender, prev_value, prev_str_gender, prev_str_value{lang} as prev_str_value
             from res)		
         SELECT json_agg(t) as json_agg
         from (
@@ -133,7 +141,7 @@ def get_answers(db, organization: str, campaign: str, method: str, project: str 
                                                     , (
                                                         select json_agg(ir order by gender, prev_gender)
                                                         from (
-                                                            select gender, value,str_gender, str_value
+                                                            select gender, value,str_gender, str_list, str_value
                                                             , prev_gender, prev_value, prev_str_gender, prev_str_value
                                                             from indicator_result ir
                                                             where  msi.id_campaign = ir.id_campaign  and msi.id_survey = ir.id_survey and msi.id_method =ir.id_method and msi.id_methods_section=ir.id_methods_section
@@ -240,7 +248,8 @@ def get_export_answers(db, campaign: str, method: str
     lang = ("_" + language) if language is not None else ""
     orga = f" and ac.id_organization='{organization}'" if organization is not None else ""
     prj = f" and ac.id_project='{project}'" if project is not None and project != '' else ""
-    prjcols = ", id_project, project_name " if project is not None and project != '' else ""
+    # prjcols = ", id_project, project_name " if project is not None and project != '' else ""
+    prjcols = ", coalesce(id_project,'') as id_project, coalesce(project_name,'') as project_name "
     net = f"""
             and exists (
                 select *
@@ -253,17 +262,17 @@ def get_export_answers(db, campaign: str, method: str
         with res as (
             select  ac.campaign_name{lang} as campaign_name, ac."year", id_campaign
                 , ac.id_method,  ac.method_name{lang} as method_name
-                , ac.vat_number, ac.organization_name, ac.id_organization  
+                , ac.vat_number, ac.organization_name, ac.id_organization
                 , ac.method_section_title{lang} as method_section_title , ac.path_order 
                 , ac.id_indicator, ac.indicator_code , ac.indicator_name{lang} as indicator_name
                 , ac.is_direct_indicator , ac.indicator_category , ac.indicator_data_type 
                 {prjcols}
-                , unnest(translate(ac.str_gender, '[]', '{{}}')::text[]) gender
+                , unnest(translate(coalesce(ac.str_gender, ac.str_list{lang}), '[]', '{{}}')::text[]) gender
                 , ac.str_value{lang} as str_value
                 , unnest((case 
                     when ac.str_value not like '[%%' then '{{'||trim(replace(ac.str_value{lang},',','|'))||'}}'  
                     else replace(replace(translate(ac.str_value{lang}, '[]', '{{}}') , ',}}','}}'),', }}', '}}')
-                    end)::text[])value
+                    end)::text[]) as value
             from external.answers_calc_agg ac 
             where 1=1
                 and ac.id_campaign ='{campaign}'
@@ -285,8 +294,9 @@ def get_export_answers(db, campaign: str, method: str
     """
 
     cols = ['id_campaign', 'campaign_name', '"year"', 'id_organization', 'vat_number', 'organization_name']
-    if project is not None and project != '':
-        cols.extend(['id_project', 'project_name'])
+    cols.extend(['id_project', 'project_name'])
+    # if project is not None and project != '':
+    #     cols.extend(['id_project', 'project_name'])
     cols.extend(['id_method', 'method_name', 'method_section_title'
                     , 'path_order', 'id_indicator', 'indicator_code', 'indicator_name', 'is_direct_indicator',
                  'indicator_category',
@@ -296,8 +306,9 @@ def get_export_answers(db, campaign: str, method: str
     df = querytodataframe(qry, cols, conn)
 
     colsexcel = [df.vat_number, df.organization_name]
-    if project is not None and project != '':
-        colsexcel.append(df.project_name)
+    colsexcel.append(df.project_name)
+    # if project is not None and project != '':
+    #     colsexcel.append(df.project_name)
 
     convert_dict = {'valor': str}
     df = df.astype(convert_dict)

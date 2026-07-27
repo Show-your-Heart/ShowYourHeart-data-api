@@ -303,7 +303,7 @@ def get_export_answers(db, campaign: str, method: str
         )
          select f.id_campaign, f.campaign_name, f."year"
              , f.id_organization, r.vat_number, f.organization_name
-             {prjcols}
+             , f.id_project as id_project, coalesce(f.project_name,'') as project_name
              , f.id_method, f.method_name
              , f.method_section_title, f.path_order
              , f.id_indicator, f.indicator_code, f.indicator_name, f.is_direct_indicator, f.indicator_category, f.indicator_data_type

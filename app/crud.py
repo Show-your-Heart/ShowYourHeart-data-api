@@ -88,7 +88,7 @@ def get_answers(db, organization: str, campaign: str, method: str, project: str 
                 , a.str_list, a.str_list_en, a.str_list_ca, a.str_list_es, a.str_list_eu, a.str_list_gl, a.str_list_nl, a.str_list_fr
                 , a.str_value, a.str_value_en, a.str_value_ca, a.str_value_es, a.str_value_eu, a.str_value_gl, a.str_value_nl, a.str_list_fr
                 , a.id_project, a.project_name
-                , p.gender as prev_gender
+                , p.gender as prev_gender, p.gender_en as prev_gender_en, p.gender_ca as prev_gender_ca, p.gender_es as prev_gender_es, p.gender_eu as prev_gender_eu, p.gender_gl as prev_gender_gl, p.gender_nl as prev_gender_nl, p.gender_fr as prev_gender_fr
                 , p.value as prev_value
                 , p.str_gender as prev_str_gender
                 , p.str_list as prev_str_list, p.str_list_en as prev_str_list_en, p.str_list_ca as prev_str_list_ca, p.str_list_es as prev_str_list_es, p.str_list_eu as prev_str_list_eu, p.str_list_gl as prev_str_list_gl, p.str_list_nl as prev_str_list_nl, p.str_list_nl as prev_str_list_fr

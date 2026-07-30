@@ -83,13 +83,14 @@ def get_answers(db, organization: str, campaign: str, method: str, project: str 
                 , a.method_order, a.method_level, a.path_order, a.sort_value
                 , a.id_indicator, a.indicator_code, a.indicator_name, a.indicator_name_en, a.indicator_name_ca, a.indicator_name_es, a.indicator_name_eu, a.indicator_name_gl, a.indicator_name_nl, a.indicator_name_fr
                 , a.indicator_description, a.indicator_description_en, a.indicator_description_ca, a.indicator_description_es, a.indicator_description_eu, a.indicator_description_gl, a.indicator_description_nl, a.indicator_description_fr
-                , a.is_direct_indicator, a.indicator_category, a.indicator_data_type, a.indicator_unit, a.gender
+                , a.is_direct_indicator, a.indicator_category, a.indicator_data_type, a.indicator_unit
+                , a.gender, a.gender_en, a.gender_ca, a.gender_es, a.gender_eu, a.gender_gl, a.gender_nl, a.gender_fr
                 , a.value, a.num_gender
                 , a.str_gender, a.str_gender_en, a.str_gender_ca, a.str_gender_es, a.str_gender_eu, a.str_gender_gl, a.str_gender_nl, a.str_gender_fr
                 , a.str_list, a.str_list_en, a.str_list_ca, a.str_list_es, a.str_list_eu, a.str_list_gl, a.str_list_nl, a.str_list_fr
                 , a.str_value, a.str_value_en, a.str_value_ca, a.str_value_es, a.str_value_eu, a.str_value_gl, a.str_value_nl, a.str_list_fr
                 , a.id_project, a.project_name
-                , p.gender as prev_gender
+                , p.gender as prev_gender, p.gender_en as prev_gender_en, p.gender_ca as prev_gender_ca, p.gender_es as prev_gender_es, p.gender_eu as prev_gender_eu, p.gender_gl as prev_gender_gl, p.gender_nl as prev_gender_nl, p.gender_fr as prev_gender_fr
                 , p.value as prev_value
                 , p.str_gender as prev_str_gender, p.str_gender_en as prev_str_gender_en, p.str_gender_ca as prev_str_gender_ca, p.str_gender_es as prev_str_gender_es, p.str_gender_eu as prev_str_gender_eu, p.str_gender_gl as prev_str_gender_gl, p.str_gender_nl as prev_str_gender_nl, p.str_gender_fr as prev_str_gender_fr
                 , p.str_list as prev_str_list, p.str_list_en as prev_str_list_en, p.str_list_ca as prev_str_list_ca, p.str_list_es as prev_str_list_es, p.str_list_eu as prev_str_list_eu, p.str_list_gl as prev_str_list_gl, p.str_list_nl as prev_str_list_nl, p.str_list_nl as prev_str_list_fr
@@ -125,8 +126,8 @@ def get_answers(db, organization: str, campaign: str, method: str, project: str 
             from res)	
         , indicator_result as  (
             select distinct id_campaign, id_survey, id_method, id_methods_section, id_indicator
-                , gender, value, str_gender{lang} as str_gender, str_list{lang} as str_list, str_value{lang} as str_value
-                , prev_gender, prev_value, prev_str_gender{lang} as prev_str_gender, prev_str_list{lang} as prev_str_list, prev_str_value{lang} as prev_str_value
+                , gender{lang} as gender, value, str_gender{lang} as str_gender, str_list{lang} as str_list, str_value{lang} as str_value
+                , prev_gender{lang} as prev_gender, prev_value, prev_str_gender{lang} as prev_str_gender, prev_str_list{lang} as prev_str_list, prev_str_value{lang} as prev_str_value
             from res)		
         SELECT json_agg(t) as json_agg
         from (
@@ -150,8 +151,8 @@ def get_answers(db, organization: str, campaign: str, method: str, project: str 
                                                     , (
                                                         select json_agg(ir order by gender, prev_gender)
                                                         from (
-                                                            select str_gender as gender, value,str_gender, str_list, str_value
-                                                            , prev_str_gender as prev_gender, prev_value, prev_str_gender, prev_str_value
+                                                            select gender, value,str_gender, str_list, str_value
+                                                            , prev_gender, prev_value, prev_str_gender, prev_str_value
                                                             from indicator_result ir
                                                             where  msi.id_campaign = ir.id_campaign  and msi.id_survey = ir.id_survey and msi.id_method =ir.id_method and msi.id_methods_section=ir.id_methods_section
                                                                     and msi.id_indicator =ir.id_indicator

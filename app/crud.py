@@ -72,20 +72,27 @@ def get_answers(db, organization: str, campaign: str, method: str, project: str 
     dr = ' and a.is_direct_indicator' if direct_indicators else 'and not a.is_direct_indicator'
     qry = f"""
         with res as (
-            select a.id_campaign, a.campaign_name, a.campaign_name_en, a.campaign_name_ca, a.campaign_name_es, a.campaign_name_eu, a.campaign_name_gl, a.campaign_name_nl, a."year", a.previous_campaign_id
+            select a.id_campaign
+                , a.campaign_name, a.campaign_name_en, a.campaign_name_ca, a.campaign_name_es, a.campaign_name_eu, a.campaign_name_gl, a.campaign_name_nl, a.campaign_name_fr
+                , a."year", a.previous_campaign_id
                 , a.id_survey, a.survey_created_at, a.survey_updated_at, a.status
-                , a.id_method, a.method_name, a.method_name_en, a.method_name_ca, a.method_name_es, a.method_name_eu, a.method_name_gl, a.method_name_nl, a.method_description, a.method_description_en, a.method_description_ca, a.method_description_es, a.method_description_eu, a.method_description_gl, a.method_description_nl, a.id_user, a.user_name, a.user_surname, a.user_email, a.id_organization, a.organization_name, a.vat_number
-                , coalesce(a.id_methods_section, 'e2ef801f-adbc-60d2-36d0-0b9f3516ebc7') id_methods_section, a.method_section_title, a.method_section_title_en, a.method_section_title_ca, a.method_section_title_es, a.method_section_title_eu, a.method_section_title_gl, a.method_section_title_nl, a.method_order, a.method_level, a.path_order, a.sort_value
-                , a.id_indicator, a.indicator_code, a.indicator_name, a.indicator_name_en, a.indicator_name_ca, a.indicator_name_es, a.indicator_name_eu, a.indicator_name_gl, a.indicator_name_nl, a.indicator_description, a.indicator_description_en, a.indicator_description_ca, a.indicator_description_es, a.indicator_description_eu, a.indicator_description_gl, a.indicator_description_nl, a.is_direct_indicator, a.indicator_category, a.indicator_data_type, a.indicator_unit, a.gender
-                , a.value, a.num_gender, a.str_gender
-                , a.str_list, a.str_list_en, a.str_list_ca, a.str_list_es, a.str_list_eu, a.str_list_gl, a.str_list_nl
-                , a.str_value, a.str_value_en, a.str_value_ca, a.str_value_es, a.str_value_eu, a.str_value_gl, a.str_value_nl
+                , a.id_method, a.method_name, a.method_name_en, a.method_name_ca, a.method_name_es, a.method_name_eu, a.method_name_gl, a.method_name_nl, a.method_name_fr
+                , a.method_description, a.method_description_en, a.method_description_ca, a.method_description_es, a.method_description_eu, a.method_description_gl, a.method_description_nl, a.method_description_fr
+                , a.id_user, a.user_name, a.user_surname, a.user_email, a.id_organization, a.organization_name, a.vat_number
+                , coalesce(a.id_methods_section, 'e2ef801f-adbc-60d2-36d0-0b9f3516ebc7') id_methods_section, a.method_section_title, a.method_section_title_en, a.method_section_title_ca, a.method_section_title_es, a.method_section_title_eu, a.method_section_title_gl, a.method_section_title_nl, a.method_section_title_fr
+                , a.method_order, a.method_level, a.path_order, a.sort_value
+                , a.id_indicator, a.indicator_code, a.indicator_name, a.indicator_name_en, a.indicator_name_ca, a.indicator_name_es, a.indicator_name_eu, a.indicator_name_gl, a.indicator_name_nl, a.indicator_description, a.indicator_description_en, a.indicator_description_ca, a.indicator_description_es, a.indicator_description_eu, a.indicator_description_gl, a.indicator_description_nl, , a.indicator_description_fr
+                , a.is_direct_indicator, a.indicator_category, a.indicator_data_type, a.indicator_unit, a.gender
+                , a.value, a.num_gender
+                , a.str_gender, a.str_gender_en, a.str_gender_ca, a.str_gender_es, a.str_gender_eu, a.str_gender_gl, a.str_gender_nl, a.str_gender_fr
+                , a.str_list, a.str_list_en, a.str_list_ca, a.str_list_es, a.str_list_eu, a.str_list_gl, a.str_list_nl, a.str_list_fr
+                , a.str_value, a.str_value_en, a.str_value_ca, a.str_value_es, a.str_value_eu, a.str_value_gl, a.str_value_nl, a.str_list_fr
                 , a.id_project, a.project_name
                 , p.gender as prev_gender
                 , p.value as prev_value
                 , p.str_gender as prev_str_gender
-                , p.str_list as prev_str_list, p.str_list_en as prev_str_list_en, p.str_list_ca as prev_str_list_ca, p.str_list_es as prev_str_list_es, p.str_list_eu as prev_str_list_eu, p.str_list_gl as prev_str_list_gl, p.str_list_nl as prev_str_list_nl
-                , p.str_value as prev_str_value, p.str_value_en as prev_str_value_en, p.str_value_ca as prev_str_value_ca, p.str_value_es as prev_str_value_es, p.str_value_eu as prev_str_value_eu, p.str_value_gl as prev_str_value_gl, p.str_value_nl as prev_str_value_nl
+                , p.str_list as prev_str_list, p.str_list_en as prev_str_list_en, p.str_list_ca as prev_str_list_ca, p.str_list_es as prev_str_list_es, p.str_list_eu as prev_str_list_eu, p.str_list_gl as prev_str_list_gl, p.str_list_nl as prev_str_list_nl, p.str_list_nl as prev_str_list_fr
+                , p.str_value as prev_str_value, p.str_value_en as prev_str_value_en, p.str_value_ca as prev_str_value_ca, p.str_value_es as prev_str_value_es, p.str_value_eu as prev_str_value_eu, p.str_value_gl as prev_str_value_gl, p.str_value_nl as prev_str_value_nl, p.str_value_nl as prev_str_value_fr
                 from external.answers_calc_agg a
                 left join external.answers_calc_agg p on a.id_organization = p.id_organization and a.previous_campaign_id  = p.id_campaign 
                     and a.id_indicator = p.id_indicator
@@ -117,8 +124,8 @@ def get_answers(db, organization: str, campaign: str, method: str, project: str 
             from res)	
         , indicator_result as  (
             select distinct id_campaign, id_survey, id_method, id_methods_section, id_indicator
-                , gender, value, str_gender, str_list{lang} as str_list, str_value{lang} as str_value
-                , prev_gender, prev_value, prev_str_gender, prev_str_list{lang} as prev_str_list, prev_str_value{lang} as prev_str_value
+                , gender, value, str_gender{lang} as str_gender, str_list{lang} as str_list, str_value{lang} as str_value
+                , prev_gender, prev_value, prev_str_gender{lang} as prev_str_gender, prev_str_list{lang} as prev_str_list, prev_str_value{lang} as prev_str_value
             from res)		
         SELECT json_agg(t) as json_agg
         from (
@@ -200,7 +207,7 @@ def get_review_answers(db
         , id_user, user_name, user_surname, user_email, id_organization, organization_name, vat_number
         , id_methods_section, method_section_title{lang} as method_section_title, method_order, method_level, path_order, sort_value
         , id_indicator, indicator_code, indicator_name{lang} as indicator_name, indicator_description{lang} as indicator_description, indicator_category, indicator_data_type, indicator_unit
-        , str_gender, str_value
+        , str_gender{lang} as str_gender, str_value
         , id_project, project_name
         from external.answers_calc_agg a
          where 1=1 
@@ -268,7 +275,7 @@ def get_export_answers(db, campaign: str, method: str
                 , ac.id_indicator, ac.indicator_code , ac.indicator_name{lang} as indicator_name
                 , ac.is_direct_indicator , ac.indicator_category , ac.indicator_data_type 
                 {prjcols}
-                , unnest(translate(coalesce(ac.str_gender, ac.str_list{lang}), '[]', '{{}}')::text[]) gender
+                , unnest(translate(coalesce(ac.str_gender{lang}, ac.str_list{lang}), '[]', '{{}}')::text[]) gender
                 , ac.str_value{lang} as str_value
                 , unnest((case 
                     when ac.str_value not like '[%%' then '{{'||trim(replace(ac.str_value{lang},',','|'))||'}}'  

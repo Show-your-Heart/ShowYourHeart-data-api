@@ -81,7 +81,8 @@ def get_answers(db, organization: str, campaign: str, method: str, project: str 
                 , a.id_user, a.user_name, a.user_surname, a.user_email, a.id_organization, a.organization_name, a.vat_number
                 , coalesce(a.id_methods_section, 'e2ef801f-adbc-60d2-36d0-0b9f3516ebc7') id_methods_section, a.method_section_title, a.method_section_title_en, a.method_section_title_ca, a.method_section_title_es, a.method_section_title_eu, a.method_section_title_gl, a.method_section_title_nl, a.method_section_title_fr
                 , a.method_order, a.method_level, a.path_order, a.sort_value
-                , a.id_indicator, a.indicator_code, a.indicator_name, a.indicator_name_en, a.indicator_name_ca, a.indicator_name_es, a.indicator_name_eu, a.indicator_name_gl, a.indicator_name_nl, a.indicator_description, a.indicator_description_en, a.indicator_description_ca, a.indicator_description_es, a.indicator_description_eu, a.indicator_description_gl, a.indicator_description_nl, a.indicator_description_fr
+                , a.id_indicator, a.indicator_code, a.indicator_name, a.indicator_name_en, a.indicator_name_ca, a.indicator_name_es, a.indicator_name_eu, a.indicator_name_gl, a.indicator_name_nl, a.indicator_name_fr
+                , a.indicator_description, a.indicator_description_en, a.indicator_description_ca, a.indicator_description_es, a.indicator_description_eu, a.indicator_description_gl, a.indicator_description_nl, a.indicator_description_fr
                 , a.is_direct_indicator, a.indicator_category, a.indicator_data_type, a.indicator_unit, a.gender
                 , a.value, a.num_gender
                 , a.str_gender, a.str_gender_en, a.str_gender_ca, a.str_gender_es, a.str_gender_eu, a.str_gender_gl, a.str_gender_nl, a.str_gender_fr
@@ -149,8 +150,8 @@ def get_answers(db, organization: str, campaign: str, method: str, project: str 
                                                     , (
                                                         select json_agg(ir order by gender, prev_gender)
                                                         from (
-                                                            select gender, value,str_gender, str_list, str_value
-                                                            , prev_gender, prev_value, prev_str_gender, prev_str_value
+                                                            select str_gender as gender, value,str_gender, str_list, str_value
+                                                            , prev_str_gender as prev_gender, prev_value, prev_str_gender, prev_str_value
                                                             from indicator_result ir
                                                             where  msi.id_campaign = ir.id_campaign  and msi.id_survey = ir.id_survey and msi.id_method =ir.id_method and msi.id_methods_section=ir.id_methods_section
                                                                     and msi.id_indicator =ir.id_indicator

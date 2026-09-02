@@ -343,7 +343,7 @@ def get_export_answers(db, campaign: str, method: str
                     , ac.id_indicator, ac.indicator_code , ac.indicator_name{lang} as indicator_name
                     , ac.is_direct_indicator , ac.indicator_category , ac.indicator_data_type 
                     {prjcols}
-                    , unnest(translate(coalesce(ac.str_gender{lang}, ac.str_list{lang}), '[]', '{{}}')::text[]) gender
+                    , unnest(translate(coalesce(ac.str_gender{lang}, ac.str_list{lang}, '[null]'), '[]', '{{}}')::text[]) gender
                     , ac.str_value{lang} as str_value
                     , unnest((case 
                         when ac.str_value not like '[%%' then '{{'||trim(replace(ac.str_value{lang},',','|'))||'}}'  

@@ -347,8 +347,8 @@ def get_export_answers(db, campaign: str, method: str
                     , unnest(translate(coalesce(ac.str_gender{lang}, ac.str_list{lang}, '[null]'), '[]', '{{}}')::text[]) gender
                     , ac.str_value{lang} as str_value
                     , unnest((case 
-                        when ac.str_value not like '[%%' then '{{'||trim(replace(ac.str_value{lang},',','|'))||'}}'  
-                        else replace(replace(translate(ac.str_value{lang}, '[]', '{{}}') , ',}}','}}'),', }}', '}}')
+                        when ac.str_value not like '[%%' then '{{'||trim(replace(replace(ac.str_value{lang}, '"', ''),',','|'))||'}}'  
+                        else replace(replace(translate(replace(ac.str_value{lang},'"',''), '[]', '{{}}') , ',}}','}}'),', }}', '}}')
                         end)::text[]) as value
                 from external.answers_calc_agg_full ac 
                 where 1=1

@@ -78,7 +78,8 @@ def get_answers(db, organization: str, campaign: str, method: str, project: str 
                 , a.id_survey, a.survey_created_at, a.survey_updated_at, a.status
                 , a.id_method, a.method_name, a.method_name_en, a.method_name_ca, a.method_name_es, a.method_name_eu, a.method_name_gl, a.method_name_nl, a.method_name_fr
                 , a.method_description, a.method_description_en, a.method_description_ca, a.method_description_es, a.method_description_eu, a.method_description_gl, a.method_description_nl, a.method_description_fr
-                , a.id_user, a.user_name, a.user_surname, a.user_email, a.id_organization, a.organization_name, a.vat_number
+                , a.id_user, a.user_name, a.user_surname, a.user_email
+                , a.id_organization, a.organization_name, a.vat_number, a.organization_logo
                 , coalesce(a.id_methods_section, 'e2ef801f-adbc-60d2-36d0-0b9f3516ebc7') id_methods_section, a.method_section_title, a.method_section_title_en, a.method_section_title_ca, a.method_section_title_es, a.method_section_title_eu, a.method_section_title_gl, a.method_section_title_nl, a.method_section_title_fr
                 , a.method_order, a.method_level, a.path_order, a.sort_value
                 , a.id_indicator, a.indicator_code, a.indicator_name, a.indicator_name_en, a.indicator_name_ca, a.indicator_name_es, a.indicator_name_eu, a.indicator_name_gl, a.indicator_name_nl, a.indicator_name_fr
@@ -108,7 +109,7 @@ def get_answers(db, organization: str, campaign: str, method: str, project: str 
             from res)
         , survey as  (
             select distinct id_campaign, id_survey,survey_created_at, survey_updated_at,status 
-                , id_organization, organization_name, vat_number, id_project, project_name 
+                , id_organization, organization_name, organization_logo, vat_number, id_project, project_name 
             from res)
         , method as  (
             select distinct id_campaign, id_survey, id_method, method_name{lang} as method_name
@@ -135,7 +136,7 @@ def get_answers(db, organization: str, campaign: str, method: str, project: str 
                 , (
                     SELECT json_agg(s) 
                     FROM (
-                        SELECT id_survey,survey_created_at, survey_updated_at,status, id_organization, organization_name, vat_number, id_project, project_name  
+                        SELECT id_survey,survey_created_at, survey_updated_at,status, id_organization, organization_name, organization_logo, vat_number, id_project, project_name  
                         , (
                             select json_agg(m)
                             from (

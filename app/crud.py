@@ -350,6 +350,7 @@ def get_export_answers(db, campaign: str, method: str
                         when ac.str_value not like '[%%' then '{{'||trim(replace(replace(ac.str_value{lang}, '"', ''),',','|'))||'}}'  
                         else replace(replace(translate(replace(ac.str_value{lang},'"',''), '[]', '{{}}') , ',}}','}}'),', }}', '}}')
                         end)::text[]) as value
+                    , set_code, instance_number
                 from external.answers_calc_agg_full ac 
                 where 1=1
                     and ac.id_campaign ='{campaign}'
@@ -367,11 +368,13 @@ def get_export_answers(db, campaign: str, method: str
                     , id_indicator, indicator_code, indicator_name, is_direct_indicator, indicator_category, indicator_data_type
                     , coalesce(case when str_value like '["%%' and gender is null then value else gender end,'') as classificacio
                     , case when str_value like '["%%' and gender is null then '1' else value end as valor
+                    , set_code, instance_number
                 from res
-                order by res.vat_number, path_order, is_direct_indicator, indicator_code, classificacio   
+                order by res.vat_number, path_order, set_code, instance_number, is_direct_indicator, indicator_code, classificacio   
     """
 
-    cols = ['id_campaign', 'campaign_name', '"year"', 'id_organization', 'vat_number', 'organization_name']
+    cols = ['id_campaign', 'campaign_name', '"year"', 'id_organization', 'vat_number', 'organization_name'
+            , 'set_code', 'instance_number']
     cols.extend(['id_project', 'project_name'])
     # if project is not None and project != '':
     #     cols.extend(['id_project', 'project_name'])
@@ -392,7 +395,9 @@ def get_export_answers(db, campaign: str, method: str
     df = df.astype(convert_dict)
 
     ct = pd.crosstab(
-        index=[df.path_order, df.method_section_title, df.method_name, df.is_direct_indicator, df.indicator_code,
+        index=[df.path_order, df.method_name, df.method_section_title
+            , df.set_code, df.instance_number
+            , df.is_direct_indicator, df.indicator_code,
                df.indicator_name, df.classificacio]
         , columns=colsexcel, values=df.valor, aggfunc="min")
 
@@ -403,12 +408,14 @@ def get_export_answers(db, campaign: str, method: str
         ct.to_excel(writer, sheet_name="Resultats")
         worksheet = writer.sheets['Resultats']
         worksheet.column_dimensions['A'].hidden = True
-        worksheet.column_dimensions['D'].hidden = True
+        worksheet.column_dimensions['F'].hidden = True
         worksheet.column_dimensions['B'].width = 30
         worksheet.column_dimensions['C'].width = 30
         worksheet.column_dimensions['E'].width = 30
         worksheet.column_dimensions['F'].width = 30
         worksheet.column_dimensions['G'].width = 30
+        worksheet.column_dimensions['H'].width = 30
+        worksheet.column_dimensions['I'].width = 30
 
         for col in range(8, 4000):
             column_letter = get_column_letter(col)

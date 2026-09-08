@@ -368,7 +368,7 @@ def get_export_answers(db, campaign: str, method: str
                     , id_indicator, indicator_code, indicator_name, is_direct_indicator, indicator_category, indicator_data_type
                     , coalesce(case when str_value like '["%%' and gender is null then value else gender end,'') as classificacio
                     , case when str_value like '["%%' and gender is null then '1' else value end as valor
-                    , set_code, instance_number
+                    , set_code, coalesce(instance_number, 0) as instance_number
                 from res
                 order by res.vat_number, path_order, set_code, instance_number, is_direct_indicator, indicator_code, classificacio   
     """

@@ -286,7 +286,7 @@ def get_export_answers(db, campaign: str, method: str
                         when ac.str_value not like '[%%' then '{{'||trim(replace(replace(ac.str_value{lang}, '"', ''),',','|'))||'}}'  
                         else replace(replace(translate(replace(ac.str_value{lang},'"',''), '[]', '{{}}') , ',}}','}}'),', }}', '}}')
                         end)::text[]) as value
-                    , set_code, set_name{lang} as set_name, instance_number
+                    , set_code, coalesce(set_name{lang},'') as set_name, instance_number
                 from external.answers_calc_agg_full ac 
                 where 1=1
                     and ac.id_campaign ='{campaign}'

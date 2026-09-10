@@ -411,8 +411,8 @@ def get_export_answers(db, campaign: str, method: str
         worksheet.column_dimensions['A'].hidden = True
         worksheet.column_dimensions['F'].hidden = True
         # si no hi ha sets amaguem les columnes
-        worksheet.column_dimensions['D'].width = True if len(pd.unique(df['instance_number'])) == 1 else False
-        worksheet.column_dimensions['E'].width = True if len(pd.unique(df['instance_number'])) == 1 else False
+        worksheet.column_dimensions['D'].hidden = True if len(pd.unique(df['instance_number'])) == 1 else False
+        worksheet.column_dimensions['E'].hidden = True if len(pd.unique(df['instance_number'])) == 1 else False
         worksheet.column_dimensions['B'].width = 30
         worksheet.column_dimensions['C'].width = 30
         worksheet.column_dimensions['D'].width = 30

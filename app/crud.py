@@ -365,6 +365,124 @@ def get_export_answers(db, campaign: str, method: str
         return f"export_{df.iloc[1]['campaign_name']}-{df.iloc[1]['method_name'].replace('/', '_')}.xlsx"
 
 
+def get_export_external_answers(db, campaign: str, method: str
+                       , organization: str = None
+                       , network: str = None
+                       , project: str = None,
+                       language: str = None):
+    lang = ("_" + language) if language is not None else ""
+    orga = f" and ac.id_organization='{organization}'" if organization is not None else ""
+    prj = f" and ac.id_project='{project}'" if project is not None and project != '' else ""
+    # prjcols = ", id_project, project_name " if project is not None and project != '' else ""
+    prjcols = ", id_project as id_project, coalesce(project_name,'') as project_name "
+    net = f"""
+            and exists (
+                select *
+                from syh_settings_network_organizations n
+                where ac.id_organization = n.organization_id 
+                    and n.network_id='{network}'
+            )   
+            """ if network is not None else ""
+
+    qry = f"""
+            with res as (
+                select  ac.campaign_name{lang} as campaign_name, ac."year", id_campaign
+                    , ac.id_method,  ac.method_name{lang} as method_name
+                    , ac.vat_number, ac.organization_name, ac.id_organization
+                    , ac.method_section_title{lang} as method_section_title , ac.path_order 
+                    , ac.id_indicator, ac.indicator_code , ac.indicator_name{lang} as indicator_name
+                    , ac.is_direct_indicator , ac.indicator_category , ac.indicator_data_type 
+                    {prjcols}
+                    , unnest(translate(coalesce(ac.str_gender{lang}, ac.str_list{lang}, '[null]'), '[]', '{{}}')::text[]) gender
+                    , ac.str_value{lang} as str_value
+                    , unnest((case 
+                        when ac.str_value not like '[%%' then '{{'||trim(replace(replace(ac.str_value{lang}, '"', ''),',','|'))||'}}'  
+                        else replace(replace(translate(replace(ac.str_value{lang},'"',''), '[]', '{{}}') , ',}}','}}'),', }}', '}}')
+                        end)::text[]) as value
+                    , set_code, coalesce(set_name{lang},'') as set_name, instance_number
+                    , invitation_user_token
+                from external.answers_calc_agg_full ac 
+                where 1=1
+                    and ac.id_campaign ='{campaign}'
+                    and ac.id_method ='{method}'
+                    {orga}
+                    {prj}
+                    {net}
+                order by ac.path_order , indicator_code, gender
+                )
+                select id_campaign, campaign_name, "year"
+                    , id_organization, vat_number, organization_name
+                    {prjcols}
+                    , id_method, method_name
+                    , method_section_title, path_order
+                    , id_indicator, indicator_code, indicator_name, is_direct_indicator, indicator_category, indicator_data_type
+                    , coalesce(case when str_value like '["%%' and gender is null then value else gender end,'') as classificacio
+                    , case when str_value like '["%%' and gender is null then '1' else value end as valor
+                    , set_code, set_name, coalesce(instance_number, 0) as instance_number
+                    , invitation_user_token
+                from res
+                order by res.vat_number, path_order, set_code, instance_number, is_direct_indicator, indicator_code, classificacio   
+    """
+
+    cols = ['id_campaign', 'campaign_name', '"year"', 'id_organization', 'vat_number', 'organization_name'
+            , 'set_code', 'set_name', 'instance_number', 'invitation_user_token']
+    cols.extend(['id_project', 'project_name'])
+    # if project is not None and project != '':
+    #     cols.extend(['id_project', 'project_name'])
+    cols.extend(['id_method', 'method_name', 'method_section_title'
+                    , 'path_order', 'id_indicator', 'indicator_code', 'indicator_name', 'is_direct_indicator',
+                 'indicator_category',
+                 'indicator_data_type', 'classificacio', 'valor'])
+
+    conn = db.bind
+    df = querytodataframe(qry, cols, conn)
+
+    colsexcel = [df.vat_number, df.organization_name]
+    colsexcel.append(df.project_name)
+    # if project is not None and project != '':
+    #     colsexcel.append(df.project_name)
+
+    convert_dict = {'valor': str}
+    df = df.astype(convert_dict)
+
+    ct = pd.crosstab(
+        index=[df.path_order, df.method_name, df.method_section_title
+            , df.set_code, df.set_name, df.instance_number
+            , df.is_direct_indicator, df.indicator_code,
+               df.indicator_name, df.invitation_user_token, df.classificacio]
+        , columns=colsexcel, values=df.valor, aggfunc="min")
+
+    # print(ct)
+    #
+    with pd.ExcelWriter(
+            f"export_{df.iloc[1]['campaign_name']}-{df.iloc[1]['method_name'].replace('/', '_')}.xlsx") as writer:
+        ct.to_excel(writer, sheet_name="Resultats")
+        worksheet = writer.sheets['Resultats']
+        worksheet.column_dimensions['A'].hidden = True
+        worksheet.column_dimensions['G'].hidden = True
+        # si no hi ha sets amaguem les columnes
+        worksheet.column_dimensions['D'].hidden = True if len(pd.unique(df['instance_number'])) == 1 else False
+        worksheet.column_dimensions['E'].hidden = True if len(pd.unique(df['instance_number'])) == 1 else False
+        worksheet.column_dimensions['F'].hidden = True if len(pd.unique(df['instance_number'])) == 1 else False
+        worksheet.column_dimensions['B'].width = 30
+        worksheet.column_dimensions['C'].width = 30
+        worksheet.column_dimensions['D'].width = 30
+        worksheet.column_dimensions['E'].width = 30
+        worksheet.column_dimensions['F'].width = 30
+        worksheet.column_dimensions['G'].width = 30
+        worksheet.column_dimensions['H'].width = 30
+        worksheet.column_dimensions['I'].width = 30
+        worksheet.column_dimensions['J'].width = 30
+        worksheet.column_dimensions['K'].width = 30
+
+        for col in range(8, 4000):
+            column_letter = get_column_letter(col)
+            worksheet.column_dimensions[column_letter].width = 25
+        return f"export_external_{df.iloc[1]['campaign_name']}-{df.iloc[1]['method_name'].replace('/', '_')}.xlsx"
+
+
+
+
 
 def get_export_entities(db, region1: str = None, language: str = None):
     lang = ("_" + language) if language is not None else ""

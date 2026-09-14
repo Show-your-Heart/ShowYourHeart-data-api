@@ -401,7 +401,7 @@ def get_export_external_answers(db, campaign: str, method: str
                         end)::text[]) as value
                     , set_code, coalesce(set_name{lang},'') as set_name, instance_number
                     , invitation_user_token
-                from external.answers_calc_agg_full ac 
+                from external.answers_calc_agg ac 
                 where 1=1
                     and ac.id_campaign ='{campaign}'
                     and ac.id_method ='{method}'

@@ -455,7 +455,7 @@ def get_export_external_answers(db, campaign: str, method: str
     # print(ct)
     #
     with pd.ExcelWriter(
-            f"export_{df.iloc[1]['campaign_name']}-{df.iloc[1]['method_name'].replace('/', '_')}.xlsx") as writer:
+            f"export_external_{df.iloc[1]['campaign_name']}-{df.iloc[1]['method_name'].replace('/', '_')}.xlsx") as writer:
         ct.to_excel(writer, sheet_name="Resultats")
         worksheet = writer.sheets['Resultats']
         worksheet.column_dimensions['A'].hidden = True

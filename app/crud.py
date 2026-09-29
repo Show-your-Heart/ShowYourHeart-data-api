@@ -222,7 +222,7 @@ def get_review_answers(db
         {orga}
         {prj}
         {net}
-        order by a.id_organization, path_order, indicator_code
+        order by a.id_organization, split_part(path_order,'.', 1)::int, path_order, indicator_code
     """
     cols = ['id_campaign', 'campaign_name', 'year'
         , 'id_survey', 'survey_created_at', 'survey_updated_at', 'status'
@@ -294,7 +294,7 @@ def get_export_answers(db, campaign: str, method: str
                     {orga}
                     {prj}
                     {net}
-                order by ac.path_order , indicator_code, gender
+                order by split_part(ac.path_order,'.', 1)::int, ac.path_order , indicator_code, gender
                 )
                 select id_campaign, campaign_name, "year"
                     , id_organization, vat_number, organization_name
@@ -306,7 +306,7 @@ def get_export_answers(db, campaign: str, method: str
                     , case when str_value like '["%%' and gender is null then '1' else value end as valor
                     , set_code, set_name, coalesce(instance_number, 0) as instance_number
                 from res
-                order by res.vat_number, path_order, set_code, instance_number, is_direct_indicator, indicator_code, classificacio   
+                order by res.vat_number, split_part(path_order,'.', 1)::int, path_order, set_code, instance_number, is_direct_indicator, indicator_code, classificacio   
     """
 
     cols = ['id_campaign', 'campaign_name', '"year"', 'id_organization', 'vat_number', 'organization_name'
@@ -408,7 +408,7 @@ def get_export_external_answers(db, campaign: str, method: str
                     {orga}
                     {prj}
                     {net}
-                order by ac.path_order , indicator_code, gender
+                order by split_part(ac.path_order,'.', 1)::int, ac.path_order , indicator_code, gender
                 )
                 select id_campaign, campaign_name, "year"
                     , id_organization, vat_number, organization_name
@@ -421,7 +421,7 @@ def get_export_external_answers(db, campaign: str, method: str
                     , set_code, set_name, coalesce(instance_number, 0) as instance_number
                     , invitation_user_token
                 from res
-                order by res.vat_number, path_order, set_code, instance_number, is_direct_indicator, indicator_code, classificacio   
+                order by res.vat_number, split_part(path_order,'.', 1)::int, path_order, set_code, instance_number, is_direct_indicator, indicator_code, classificacio   
     """
 
     cols = ['id_campaign', 'campaign_name', '"year"', 'id_organization', 'vat_number', 'organization_name'

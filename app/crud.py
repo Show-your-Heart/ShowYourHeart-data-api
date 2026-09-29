@@ -143,7 +143,7 @@ def get_answers(db, organization: str, campaign: str, method: str, project: str 
                             from (
                                 select id_method, method_name, method_description
                                     , (
-                                        select json_agg(ms ORDER BY path_order)
+                                        select json_agg(ms ORDER BY split_part(path_order,'.', 1)::int, path_order)
                                         from (
                                             select id_methods_section, method_section_title, path_order, method_level
                                             , (

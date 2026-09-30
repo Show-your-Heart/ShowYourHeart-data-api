@@ -154,7 +154,7 @@ def get_answers(db, organization: str, campaign: str, method: str, project: str 
                                                         select json_agg(ir order by gender, prev_gender)
                                                         from (
                                                             select gender, value,str_gender, str_list, str_value
-                                                            , prev_gender, prev_value, prev_str_gender, prev_str_value
+                                                            , prev_gender, prev_value, prev_str_gender, prev_str_list, prev_str_value
                                                             from indicator_result ir
                                                             where  msi.id_campaign = ir.id_campaign  and msi.id_survey = ir.id_survey and msi.id_method =ir.id_method and msi.id_methods_section=ir.id_methods_section
                                                                     and msi.id_indicator =ir.id_indicator

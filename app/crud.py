@@ -91,16 +91,41 @@ def get_answers(db, organization: str, campaign: str, method: str, project: str 
                 , a.str_gender, a.str_gender_en, a.str_gender_ca, a.str_gender_es, a.str_gender_eu, a.str_gender_gl, a.str_gender_nl, a.str_gender_fr
                 , a.str_list, a.str_list_en, a.str_list_ca, a.str_list_es, a.str_list_eu, a.str_list_gl, a.str_list_nl, a.str_list_fr
                 , a.str_value, a.str_value_en, a.str_value_ca, a.str_value_es, a.str_value_eu, a.str_value_gl, a.str_value_nl, a.str_value_fr
-                , a.id_project, a.project_name
+                , pr.id as id_project
+                , pr.name as project_name
+                , pr.description as project_description
+                , pr.start_date as project_start_date
+                , pr.main_action_scope as project_main_action_scope
+                , pr.secondary_action_scope as project_secondary_action_scope
+                , pr.legal_structure as project_legal_structure
+                , pr.legal_structure_en as project_legal_structure_en
+                , pr.legal_structure_ca as project_legal_structure_ca
+                , pr.legal_structure_es as project_legal_structure_es
+                , pr.legal_structure_gl as project_legal_structure_gl
+                , pr.legal_structure_eu as project_legal_structure_eu
+                , pr.legal_structure_fr as project_legal_structure_fr
+                , pr.legal_structure_nl as project_legal_structure_nl
+                , pr.secondary_legal_structure as project_secondary_legal_structure
+                , pr.secondary_legal_structure_en as project_secondary_legal_structure_en
+                , pr.secondary_legal_structure_ca as project_secondary_legal_structure_ca
+                , pr.secondary_legal_structure_es as project_secondary_legal_structure_es
+                , pr.secondary_legal_structure_gl as project_secondary_legal_structure_gl
+                , pr.secondary_legal_structure_eu as project_secondary_legal_structure_eu
+                , pr.secondary_legal_structure_fr as project_secondary_legal_structure_fr
+                , pr.secondary_legal_structure_nl as project_secondary_legal_structure_nl
+                , pr.contact_name as project_contact_name
+                , pr.contact_email as project_contact_email
+                , pr.contact_telephone as project_contact_telephone
                 , p.gender as prev_gender, p.gender_en as prev_gender_en, p.gender_ca as prev_gender_ca, p.gender_es as prev_gender_es, p.gender_eu as prev_gender_eu, p.gender_gl as prev_gender_gl, p.gender_nl as prev_gender_nl, p.gender_fr as prev_gender_fr
                 , p.value as prev_value
                 , p.str_gender as prev_str_gender, p.str_gender_en as prev_str_gender_en, p.str_gender_ca as prev_str_gender_ca, p.str_gender_es as prev_str_gender_es, p.str_gender_eu as prev_str_gender_eu, p.str_gender_gl as prev_str_gender_gl, p.str_gender_nl as prev_str_gender_nl, p.str_gender_fr as prev_str_gender_fr
                 , p.str_list as prev_str_list, p.str_list_en as prev_str_list_en, p.str_list_ca as prev_str_list_ca, p.str_list_es as prev_str_list_es, p.str_list_eu as prev_str_list_eu, p.str_list_gl as prev_str_list_gl, p.str_list_nl as prev_str_list_nl, p.str_list_nl as prev_str_list_fr
                 , p.str_value as prev_str_value, p.str_value_en as prev_str_value_en, p.str_value_ca as prev_str_value_ca, p.str_value_es as prev_str_value_es, p.str_value_eu as prev_str_value_eu, p.str_value_gl as prev_str_value_gl, p.str_value_nl as prev_str_value_nl, p.str_value_nl as prev_str_value_fr
-                from external.answers_calc_agg a
+            from external.answers_calc_agg a
                 left join external.answers_calc_agg p on a.id_organization = p.id_organization and a.previous_campaign_id  = p.id_campaign 
                     and a.id_indicator = p.id_indicator
-                where a.id_organization='{organization}'
+                left join external.projects pr on pr.id = a.id_project 
+            where a.id_organization='{organization}'
                 and a.id_campaign = '{campaign}'	
                 and a.id_method = '{method}'
                 {prj}	
@@ -110,7 +135,17 @@ def get_answers(db, organization: str, campaign: str, method: str, project: str 
             from res)
         , survey as  (
             select distinct id_campaign, id_survey,survey_created_at, survey_updated_at,status 
-                , id_organization, organization_name, organization_logo, vat_number, id_project, project_name 
+                , id_organization, organization_name, organization_logo, vat_number
+                , id_project, project_name
+                , project_description
+                , project_start_date
+                , project_main_action_scope
+                , project_secondary_action_scope
+                , project_legal_structure{lang} as project_legal_structure
+                , project_secondary_legal_structure{lang} as project_secondary_legal_structure
+                , project_contact_name
+                , project_contact_email
+                , project_contact_telephone
             from res)
         , method as  (
             select distinct id_campaign, id_survey, id_method, method_name{lang} as method_name
@@ -137,7 +172,18 @@ def get_answers(db, organization: str, campaign: str, method: str, project: str 
                 , (
                     SELECT json_agg(s) 
                     FROM (
-                        SELECT id_survey,survey_created_at, survey_updated_at,status, id_organization, organization_name, organization_logo, vat_number, id_project, project_name  
+                        SELECT id_survey,survey_created_at, survey_updated_at,status, id_organization, organization_name, organization_logo, vat_number
+                            , id_project
+                            , project_name
+                            , project_description
+                            , project_start_date
+                            , project_main_action_scope
+                            , project_secondary_action_scope
+                            , project_legal_structure
+                            , project_secondary_legal_structure
+                            , project_contact_name
+                            , project_contact_email
+                            , project_contact_telephone  
                         , (
                             select json_agg(m)
                             from (

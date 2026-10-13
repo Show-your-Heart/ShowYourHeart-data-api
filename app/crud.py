@@ -350,7 +350,7 @@ def get_export_answers(db, campaign: str, method: str
                     , ac.vat_number, ac.organization_name, ac.id_organization
                     , ac.method_section_title{lang} as method_section_title , ac.path_order 
                     , ac.id_indicator, ac.indicator_code , ac.indicator_name{lang} as indicator_name
-                    , ac.is_direct_indicator , ac.indicator_category , ac.indicator_data_type 
+                    , ac.is_direct_indicator , ac.indicator_category , ac.indicator_data_type, ac.sort_value
                     {prjcols}
                     , unnest(translate(coalesce(ac.str_gender{lang}, ac.str_list{lang}, '[null]'), '[]', '{{}}')::text[]) gender
                     , ac.str_value{lang} as str_value
@@ -367,7 +367,7 @@ def get_export_answers(db, campaign: str, method: str
                     {orga}
                     {prj}
                     {net}
-                order by split_part(ac.path_order,'.', 1)::int, ac.path_order , indicator_code, gender
+                order by split_part(ac.path_order,'.', 1)::int, ac.path_order , sort_value, gender
                 )
                 select id_campaign, campaign_name, "year"
                     , id_organization, vat_number, organization_name
@@ -375,12 +375,15 @@ def get_export_answers(db, campaign: str, method: str
                     , id_method, method_name
                     , method_section_title, path_order
                     , id_indicator, indicator_code, indicator_name, is_direct_indicator, indicator_category, indicator_data_type
+                    , sort_value
                     , coalesce(case when str_value like '["%%' and gender is null then value else gender end,'') as classificacio
                     , case when str_value like '["%%' and gender is null then '1' else value end as valor
                     , set_code, set_name, coalesce(instance_number, 0) as instance_number
                 from res
-                order by res.vat_number, split_part(path_order,'.', 1)::int, path_order, set_code, instance_number, is_direct_indicator, indicator_code, classificacio   
+                order by res.vat_number, split_part(path_order,'.', 1)::int, path_order, set_code, instance_number, is_direct_indicator, sort_value, indicator_code, classificacio   
     """
+
+    print(qry)
 
     cols = ['id_campaign', 'campaign_name', '"year"', 'id_organization', 'vat_number', 'organization_name'
             , 'set_code', 'set_name', 'instance_number']
@@ -400,7 +403,7 @@ def get_export_answers(db, campaign: str, method: str
     cols.extend(['id_method', 'method_name', 'method_section_title'
                     , 'path_order', 'id_indicator', 'indicator_code', 'indicator_name', 'is_direct_indicator',
                  'indicator_category',
-                 'indicator_data_type', 'classificacio', 'valor'])
+                 'indicator_data_type', 'sort_value', 'classificacio', 'valor'])
 
     conn = db.bind
     df = querytodataframe(qry, cols, conn)
@@ -426,7 +429,7 @@ def get_export_answers(db, campaign: str, method: str
     ct = pd.crosstab(
         index=[df.path_order, df.method_name, df.method_section_title
             , df.set_code, df.set_name, df.instance_number
-            , df.is_direct_indicator, df.indicator_code,
+            , df.is_direct_indicator, df.sort_value, df.indicator_code,
                df.indicator_name, df.classificacio]
         , columns=colsexcel, values=df.valor, aggfunc="min")
 
@@ -438,6 +441,7 @@ def get_export_answers(db, campaign: str, method: str
         worksheet = writer.sheets['Resultats']
         worksheet.column_dimensions['A'].hidden = True
         worksheet.column_dimensions['G'].hidden = True
+        worksheet.column_dimensions['H'].hidden = True
         # si no hi ha sets amaguem les columnes
         worksheet.column_dimensions['D'].hidden = True if len(pd.unique(df['instance_number'])) == 1 else False
         worksheet.column_dimensions['E'].hidden = True if len(pd.unique(df['instance_number'])) == 1 else False
@@ -451,6 +455,7 @@ def get_export_answers(db, campaign: str, method: str
         worksheet.column_dimensions['H'].width = 30
         worksheet.column_dimensions['I'].width = 30
         worksheet.column_dimensions['J'].width = 30
+        worksheet.column_dimensions['K'].width = 30
 
         for col in range(8, 4000):
             column_letter = get_column_letter(col)

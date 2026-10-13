@@ -159,7 +159,7 @@ def get_answers(db, organization: str, campaign: str, method: str, project: str 
             )	
         , indicator as  (
             select distinct id_campaign, id_survey, id_method, id_methods_section, id_indicator, indicator_code, indicator_name{lang} as indicator_name, indicator_description{lang} as indicator_description
-                , is_direct_indicator, indicator_category, indicator_data_type, indicator_unit
+                , is_direct_indicator, indicator_category, indicator_data_type, indicator_unit, sort_value
             from res)	
         , indicator_result as  (
             select distinct id_campaign, id_survey, id_method, id_methods_section, id_indicator
@@ -193,9 +193,9 @@ def get_answers(db, organization: str, campaign: str, method: str, project: str 
                                         from (
                                             select id_methods_section, method_section_title, path_order, method_level
                                             , (
-                                                select json_agg(msi ORDER BY indicator_code)
+                                                select json_agg(msi ORDER BY sort_value)
                                                 from (
-                                                    select id_indicator, indicator_code, indicator_name, indicator_description, is_direct_indicator, indicator_category, indicator_data_type, indicator_unit
+                                                    select id_indicator, indicator_code, indicator_name, indicator_description, is_direct_indicator, indicator_category, indicator_data_type, indicator_unit, sort_value
                                                     , (
                                                         select json_agg(ir order by gender, prev_gender)
                                                         from (
@@ -307,7 +307,33 @@ def get_export_answers(db, campaign: str, method: str
     orga = f" and ac.id_organization='{organization}'" if organization is not None else ""
     prj = f" and ac.id_project='{project}'" if project is not None and project != '' else ""
     # prjcols = ", id_project, project_name " if project is not None and project != '' else ""
-    prjcols = ", id_project as id_project, coalesce(project_name,'') as project_name "
+    prjcols = f"""
+    , coalesce(name, '') as project_name
+    , coalesce(description, '') as project_description
+    , coalesce(start_date, '19000101') as project_start_date
+    , coalesce(main_action_scope, '') as project_main_action_scope
+    , coalesce(secondary_action_scope, '') as project_secondary_action_scope
+    , coalesce(legal_structure{lang}, '') as project_legal_structure
+    , coalesce(secondary_legal_structure{lang}, '') as project_secondary_legal_structure
+    , coalesce(contact_name, '') as project_contact_name
+    , coalesce(contact_email, '') as project_contact_email
+    , coalesce(contact_telephone, '') as project_contact_telephone
+
+    """
+
+    prjcols2 = """
+    , project_name
+    , project_description
+    , project_start_date
+    , project_main_action_scope
+    , project_secondary_action_scope
+    , project_legal_structure
+    , project_secondary_legal_structure
+    , project_contact_name
+    , project_contact_email
+    , project_contact_telephone
+    """
+
     net = f"""
             and exists (
                 select *
@@ -334,6 +360,7 @@ def get_export_answers(db, campaign: str, method: str
                         end)::text[]) as value
                     , set_code, coalesce(set_name{lang},'') as set_name, instance_number
                 from external.answers_calc_agg_full ac 
+                left join external.projects pr on pr.id = ac.id_project       
                 where 1=1
                     and ac.id_campaign ='{campaign}'
                     and ac.id_method ='{method}'
@@ -344,7 +371,7 @@ def get_export_answers(db, campaign: str, method: str
                 )
                 select id_campaign, campaign_name, "year"
                     , id_organization, vat_number, organization_name
-                    {prjcols}
+                    {prjcols2}
                     , id_method, method_name
                     , method_section_title, path_order
                     , id_indicator, indicator_code, indicator_name, is_direct_indicator, indicator_category, indicator_data_type
@@ -357,7 +384,17 @@ def get_export_answers(db, campaign: str, method: str
 
     cols = ['id_campaign', 'campaign_name', '"year"', 'id_organization', 'vat_number', 'organization_name'
             , 'set_code', 'set_name', 'instance_number']
-    cols.extend(['id_project', 'project_name'])
+    cols.extend(['id_project', 'project_name'
+                 , 'project_description'
+                , 'project_start_date'
+                , 'project_main_action_scope'
+                , 'project_secondary_action_scope'
+                , 'project_legal_structure'
+                , 'project_secondary_legal_structure'
+                , 'project_contact_name'
+                , 'project_contact_email'
+                , 'project_contact_telephone'
+                 ])
     # if project is not None and project != '':
     #     cols.extend(['id_project', 'project_name'])
     cols.extend(['id_method', 'method_name', 'method_section_title'
@@ -370,6 +407,16 @@ def get_export_answers(db, campaign: str, method: str
 
     colsexcel = [df.vat_number, df.organization_name]
     colsexcel.append(df.project_name)
+    colsexcel.append(df.project_description)
+    colsexcel.append(df.project_start_date)
+    colsexcel.append(df.project_main_action_scope)
+    colsexcel.append(df.project_secondary_action_scope)
+    colsexcel.append(df.project_legal_structure)
+    colsexcel.append(df.project_secondary_legal_structure)
+    colsexcel.append(df.project_contact_name)
+    colsexcel.append(df.project_contact_email)
+    colsexcel.append(df.project_contact_telephone)
+
     # if project is not None and project != '':
     #     colsexcel.append(df.project_name)
 

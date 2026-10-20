@@ -379,6 +379,7 @@ def get_export_answers(db, campaign: str, method: str
                     , coalesce(case when str_value like '["%%' and gender is null then value else gender end,'') as classificacio
                     , case when str_value like '["%%' and gender is null then '1' else value end as valor
                     , set_code, set_name, coalesce(instance_number, 0) as instance_number
+                    , split_part(path_order,'.', 1)::int as po
                 from res
                 order by res.vat_number, split_part(path_order,'.', 1)::int, path_order, set_code, instance_number, is_direct_indicator, sort_value, indicator_code, classificacio   
     """
@@ -386,7 +387,7 @@ def get_export_answers(db, campaign: str, method: str
     print(qry)
 
     cols = ['id_campaign', 'campaign_name', '"year"', 'id_organization', 'vat_number', 'organization_name'
-            , 'set_code', 'set_name', 'instance_number']
+            , 'set_code', 'set_name', 'instance_number', 'po']
     cols.extend(['id_project', 'project_name'
                  , 'project_description'
                 , 'project_start_date'
@@ -427,7 +428,7 @@ def get_export_answers(db, campaign: str, method: str
     df = df.astype(convert_dict)
 
     ct = pd.crosstab(
-        index=[df.path_order, df.method_name, df.method_section_title
+        index=[df.po, df.path_order, df.method_name, df.method_section_title
             , df.set_code, df.set_name, df.instance_number
             , df.is_direct_indicator, df.sort_value, df.indicator_code,
                df.indicator_name, df.classificacio]
@@ -440,12 +441,13 @@ def get_export_answers(db, campaign: str, method: str
         ct.to_excel(writer, sheet_name="Resultats")
         worksheet = writer.sheets['Resultats']
         worksheet.column_dimensions['A'].hidden = True
-        worksheet.column_dimensions['G'].hidden = True
+        worksheet.column_dimensions['B'].hidden = True
         worksheet.column_dimensions['H'].hidden = True
+        worksheet.column_dimensions['I'].hidden = True
         # si no hi ha sets amaguem les columnes
-        worksheet.column_dimensions['D'].hidden = True if len(pd.unique(df['instance_number'])) == 1 else False
         worksheet.column_dimensions['E'].hidden = True if len(pd.unique(df['instance_number'])) == 1 else False
         worksheet.column_dimensions['F'].hidden = True if len(pd.unique(df['instance_number'])) == 1 else False
+        worksheet.column_dimensions['G'].hidden = True if len(pd.unique(df['instance_number'])) == 1 else False
         worksheet.column_dimensions['B'].width = 30
         worksheet.column_dimensions['C'].width = 30
         worksheet.column_dimensions['D'].width = 30
@@ -456,6 +458,18 @@ def get_export_answers(db, campaign: str, method: str
         worksheet.column_dimensions['I'].width = 30
         worksheet.column_dimensions['J'].width = 30
         worksheet.column_dimensions['K'].width = 30
+        worksheet.column_dimensions['L'].width = 30
+
+        worksheet.row_dimensions[3].hidden = True
+        worksheet.row_dimensions[4].hidden = True
+        worksheet.row_dimensions[5].hidden = True
+        worksheet.row_dimensions[3].hidden = True
+        worksheet.row_dimensions[7].hidden = True
+        worksheet.row_dimensions[8].hidden = True
+        worksheet.row_dimensions[9].hidden = True
+        worksheet.row_dimensions[10].hidden = True
+        worksheet.row_dimensions[11].hidden = True
+        worksheet.row_dimensions[12].hidden = True
 
         for col in range(8, 4000):
             column_letter = get_column_letter(col)

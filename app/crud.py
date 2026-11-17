@@ -677,7 +677,7 @@ def get_export_entities_web(db, network_type: str = None, language: str = None):
             {network}
         group by o.vat_number, o.name, o.description, o.website, o.address, o.longitude, o.latitude
         , z.code  
-        , u.email 
+        , u.email , up.telephone
         , ci.name{lang} 
         , r2.name{lang}
         , r1.name{lang}

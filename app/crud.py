@@ -654,6 +654,7 @@ def get_export_entities_web(db, network_type: str = None, language: str = None):
         select o.vat_number as nif, o.name, o.description, o.website, o.address, o.longitude, o.latitude
         , z.code  as zip
         , u.email as email
+        , up.telephone
         , ci.name{lang} as town
         , r2.name{lang} as province
         , r1.name{lang} as autonomous_community

@@ -662,9 +662,11 @@ def get_export_entities_web(db, network_type: str = None, language: str = None):
         , ARRAY_AGG(distinct n.name) as associations
         , logo
         , bs_allow_public
+        , ARRAY_AGG(distinct sp.name{lang}) as parent_sectors
         from syh_organizations_organization o
         left join syh_organizations_organization_sectors so on so.organization_id = o.id 
         left join syh_settings_sector s on so.sector_id = s.id 
+        left join syh_settings_sector ps on s.parent_id = ps.id 
         left join syh_geodata_city ci on ci.id = o.city_id 
         left join syh_geodata_region2 r2 on ci.region2_id  = r2.id
         left join syh_geodata_zipcode z on o.zip_code_id = z.id 
@@ -687,5 +689,6 @@ def get_export_entities_web(db, network_type: str = None, language: str = None):
 
     registries = db.execute(text(qry))
     columns = ['nif', 'name', 'description', 'website', 'address', 'longitude', 'latitude', 'zip', 'email', 'telephone',
-               'town', 'province', 'autonomous_community', 'sectors', 'associations', 'logo', 'bs_allow_public']
+               'town', 'province', 'autonomous_community', 'sectors', 'associations', 'logo', 'bs_allow_public',
+               'parent_sectors']
     return [dict(zip(columns, t)) for t in registries]

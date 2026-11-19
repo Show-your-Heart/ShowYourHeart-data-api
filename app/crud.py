@@ -662,7 +662,7 @@ def get_export_entities_web(db, network_type: str = None, language: str = None):
         , ARRAY_AGG(distinct n.name) as associations
         , logo
         , bs_allow_public
-        , ARRAY_AGG(distinct sp.name{lang}) as parent_sectors
+        , ARRAY_AGG(distinct ps.name{lang}) as parent_sectors
         from syh_organizations_organization o
         left join syh_organizations_organization_sectors so on so.organization_id = o.id 
         left join syh_settings_sector s on so.sector_id = s.id 

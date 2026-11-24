@@ -356,7 +356,7 @@ def get_export_answers(db, campaign: str, method: str
                     , ac.str_value{lang} as str_value
                     , unnest((case 
                         when ac.str_value not like '[%%' then '{{'||trim(replace(replace(ac.str_value{lang}, '"', ''),',','|'))||'}}'  
-                        else replace(replace(translate(replace(ac.str_value{lang},'"',''), '[]', '{{}}') , ',}}','}}'),', }}', '}}')
+                        else replace(replace(translate(replace(replace(ac.str_value{lang},'""', '0'),'"',''), '[]', '{{}}') , ',}}','}}'),', }}', '}}')
                         end)::text[]) as value
                     , set_code, coalesce(set_name{lang},'') as set_name, instance_number
                 from external.answers_calc_agg_full ac 
@@ -509,7 +509,7 @@ def get_export_external_answers(db, campaign: str, method: str
                     , ac.str_value{lang} as str_value
                     , unnest((case 
                         when ac.str_value not like '[%%' then '{{'||trim(replace(replace(ac.str_value{lang}, '"', ''),',','|'))||'}}'  
-                        else replace(replace(translate(replace(ac.str_value{lang},'"',''), '[]', '{{}}') , ',}}','}}'),', }}', '}}')
+                        else replace(replace(translate(replace(replace(ac.str_value{lang},'""','0'),'"',''), '[]', '{{}}') , ',}}','}}'),', }}', '}}')
                         end)::text[]) as value
                     , set_code, coalesce(set_name{lang},'') as set_name, instance_number
                     , invitation_user_token
